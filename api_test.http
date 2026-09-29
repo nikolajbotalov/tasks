@@ -1,0 +1,31 @@
+### Get all tasks
+GET http://localhost:8080/api/tasks HTTP/2
+Accept: application/json
+
+### Get task by ID
+GET http://localhost:8080/api/tasks/2d43043c-a49e-407c-b955-0b82f76073a2
+Accept: application/json
+
+### Create task
+POST http://localhost:8080/api/tasks HTTP/2
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "task 1",
+  "description": "description ашкые task"
+}
+
+### Update task
+PUT http://localhost:8080/api/tasks/5d43d8f3-155f-40fc-b0af-37bd10bcb1d5
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "task 5",
+  "description": "description fifth task"
+}
+
+### Delete Task
+DELETE http://localhost:8080/api/tasks/93c76532-981d-4ba7-83c6-061554c5d679
+Accept: application/json
