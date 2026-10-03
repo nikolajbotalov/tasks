@@ -14,8 +14,3 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
-
-type RegisterUserRequest struct {
-	Email    string `json:"login"`
-	Password string `json:"password"`
-}

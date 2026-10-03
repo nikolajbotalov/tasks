@@ -23,22 +23,7 @@ func CreateTask(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		tableName := "tasks"
-		var exists bool
-		err := db.QueryRow("SELECT to_regclass($1) IS NOT NULL", tableName).Scan(&exists)
-		if err != nil {
-			log.Println(err)
-		}
-
-		if exists {
-			log.Println("Table already exists")
-		} else {
-			log.Println("Table doesn't exists")
-			c.JSON(http.StatusNotFound, gin.H{"error": "Table doesn't exist"})
-			return
-		}
-
-		_, err = db.Exec("INSERT INTO tasks (id, name, description, created_at, updated_at) values ($1, $2, $3, $4, $5)",
+		_, err := db.Exec("INSERT INTO tasks (id, name, description, created_at, updated_at) values ($1, $2, $3, $4, $5)",
 			newUUID.String(), task.Name, task.Description, createdAt, updatedAt)
 		if err != nil {
 			log.Println(err)
