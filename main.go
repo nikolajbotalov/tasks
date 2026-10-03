@@ -32,7 +32,7 @@ func main() {
 	auth := authRepository.NewAuthRepository(db)
 	authUseCases := authUC.NewAuthUseCases(auth, cfg)
 
-	r := router.AppRouters(db, authUseCases)
+	r := router.AppRouters(db, authUseCases, cfg)
 
 	ctx := context.Background()
 
