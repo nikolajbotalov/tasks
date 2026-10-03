@@ -7,6 +7,7 @@ import (
 )
 
 type UseCases interface {
+	CreateUser(id, username, email, password string) error
 	LoginUser(email, password string) (domain.TokenPair, error)
 }
 

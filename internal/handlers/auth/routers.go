@@ -9,7 +9,7 @@ import (
 func SetupRouter(g *gin.Engine, uc auth.UseCases) {
 	authRouters := g.Group("/api/auth")
 	{
-		//authRouters.POST("/register", RegisterUser(uc))
+		authRouters.POST("/register", RegisterUser(uc))
 		authRouters.POST("/login", LoginUser(uc))
 	}
 }

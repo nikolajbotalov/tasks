@@ -7,6 +7,7 @@ import (
 )
 
 type Repository interface {
+	CreateUser(id, username, email, password string) error
 	FindUserByEmail(email string) (UserRow, error)
 }
 

@@ -38,7 +38,7 @@ Accept: application/json
 {
   "email": "test@example.com",
   "username": "test",
-  "password": "test"
+  "password": "test1234"
 }
 
 ### Login User
@@ -47,6 +47,6 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "test@example.com",
+  "email": "test1@example.com",
   "password": "test1234"
 }
