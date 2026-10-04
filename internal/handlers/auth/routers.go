@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"TaskFlow/internal/use-cases/auth"
+	authUC "TaskFlow/internal/use-cases/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(g *gin.Engine, uc auth.UseCases) {
+func SetupRouter(g *gin.Engine, uc authUC.UseCases) {
 	authRouters := g.Group("/api/auth")
 	{
 		authRouters.POST("/register", RegisterUser(uc))

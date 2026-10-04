@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	authUC "TaskFlow/internal/use-cases/auth"
+	tasksUC "TaskFlow/internal/use-cases/tasks"
 )
 
-func AppRouters(db *sql.DB, uc authUC.UseCases, cfg *config.Config) *gin.Engine {
+func AppRouters(db *sql.DB, uc authUC.UseCases, cfg *config.Config, tasksUc tasksUC.UseCases) *gin.Engine {
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -20,7 +21,7 @@ func AppRouters(db *sql.DB, uc authUC.UseCases, cfg *config.Config) *gin.Engine 
 	})
 
 	auth.SetupRouter(r, uc)
-	tasks.SetupRouter(r, db, cfg)
+	tasks.SetupRouter(r, db, cfg, tasksUc)
 
 	return r
 }

@@ -3,6 +3,7 @@ package auth
 import (
 	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
+	"TaskFlow/internal/handlers/validation"
 	"TaskFlow/internal/use-cases/auth"
 	"errors"
 	"fmt"
@@ -16,7 +17,7 @@ func RegisterUser(uc auth.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var registerUser domain.RegisterUserRequest
 		if err := c.ShouldBindJSON(&registerUser); err != nil {
-			handleBindError(c, err)
+			validation.HandleBindError(c, err)
 			return
 		}
 

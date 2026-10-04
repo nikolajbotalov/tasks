@@ -8,4 +8,5 @@ var (
 	ErrEmailExists        = errors.New("email already exists")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrHashedPassword     = errors.New("hashed password error")
+	ErrGetAuthorID        = errors.New("no author id or incorrect format")
 )

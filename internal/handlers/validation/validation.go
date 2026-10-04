@@ -1,4 +1,4 @@
-package auth
+package validation
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func handleBindError(c *gin.Context, err error) {
+func HandleBindError(c *gin.Context, err error) {
 	var validationErrors validator.ValidationErrors
 	if errors.As(err, &validationErrors) {
 		errs := make(map[string]string)

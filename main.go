@@ -3,9 +3,11 @@ package main
 import (
 	"TaskFlow/internal/config"
 	router "TaskFlow/internal/delivery/http"
-	authRepository "TaskFlow/internal/repository/auth"
+	authRepo "TaskFlow/internal/repository/auth"
 	"TaskFlow/internal/repository/postgres"
+	tasksRepo "TaskFlow/internal/repository/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
+	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"context"
 	"database/sql"
 	"log"
@@ -29,10 +31,12 @@ func main() {
 
 	log.Println("Successfully connected to db")
 
-	auth := authRepository.NewAuthRepository(db)
-	authUseCases := authUC.NewAuthUseCases(auth, cfg)
+	authRepository := authRepo.NewAuthRepository(db)
+	authUseCases := authUC.NewAuthUseCases(authRepository, cfg)
+	taskRepository := tasksRepo.NewTasksRepository(db)
+	tasksUseCases := tasksUC.NewTasksUseCases(taskRepository)
 
-	r := router.AppRouters(db, authUseCases, cfg)
+	r := router.AppRouters(db, authUseCases, cfg, tasksUseCases)
 
 	ctx := context.Background()
 

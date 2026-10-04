@@ -3,7 +3,8 @@ package auth
 import (
 	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
-	"TaskFlow/internal/use-cases/auth"
+	"TaskFlow/internal/handlers/validation"
+	authUC "TaskFlow/internal/use-cases/auth"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,11 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func LoginUser(uc auth.UseCases) gin.HandlerFunc {
+func LoginUser(uc authUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest domain.LoginUserRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
-			handleBindError(c, err)
+			validation.HandleBindError(c, err)
 			return
 		}
 

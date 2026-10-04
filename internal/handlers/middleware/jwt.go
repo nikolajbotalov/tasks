@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
@@ -40,6 +41,12 @@ func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("id", id)
+		idAsUUID, err := uuid.Parse(id)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Failed to parse uuid"})
+			return
+		}
+
+		c.Set("id", idAsUUID)
 	}
 }

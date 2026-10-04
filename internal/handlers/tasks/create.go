@@ -1,43 +1,42 @@
 package tasks
 
 import (
-	"TaskFlow/internal/domain"
-	"database/sql"
-	"log"
+	"TaskFlow/internal/delivery/response"
+	"TaskFlow/internal/handlers/helpers"
+	"TaskFlow/internal/handlers/validation"
+	tasksUC "TaskFlow/internal/use-cases/tasks"
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
-func CreateTask(db *sql.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		newUUID := uuid.New()
-		createdAt := time.Now()
-		updatedAt := time.Now()
+type CreateTaskRequest struct {
+	Name        string `json:"name" binding:"required,min=2,max=255"`
+	Description string `json:"description" binding:"max=10000"`
+}
 
-		var task domain.Task
-		if err := c.ShouldBindJSON(&task); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func CreateTask(uc tasksUC.UseCases) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authorID, err := helpers.GetAuthorID(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, response.FailedConvertAuthorID)
 			return
 		}
 
-		_, err := db.Exec("INSERT INTO tasks (id, name, description, created_at, updated_at) values ($1, $2, $3, $4, $5)",
-			newUUID.String(), task.Name, task.Description, createdAt, updatedAt)
-		if err != nil {
-			log.Println(err)
+		var requestTask CreateTaskRequest
+		if err := c.ShouldBindJSON(&requestTask); err != nil {
+			validation.HandleBindError(c, err)
+			return
 		}
 
-		row := db.QueryRow("SELECT * FROM tasks WHERE  id = $1", newUUID)
-
-		result := domain.Task{}
-
-		err = row.Scan(&result.ID, &result.Name, &result.Description, &result.CreatedAt, &result.UpdatedAt)
+		task, err := uc.CreateTask(authorID, requestTask.Name, requestTask.Description)
 		if err != nil {
-			log.Println(err)
+			fmt.Printf("Create task %s, reason: %v\n", requestTask.Name, err)
+			c.JSON(http.StatusInternalServerError, response.CreateTask)
+			return
 		}
 
-		c.JSON(http.StatusCreated, result)
+		c.JSON(http.StatusCreated, task)
 	}
 }

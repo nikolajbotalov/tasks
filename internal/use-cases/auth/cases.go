@@ -3,8 +3,12 @@ package auth
 import (
 	"TaskFlow/internal/config"
 	"TaskFlow/internal/domain"
-	"TaskFlow/internal/repository/auth"
 )
+
+type Repository interface {
+	CreateUser(id, username, email, password string) error
+	FindUserByEmail(email string) (domain.UserRow, error)
+}
 
 type UseCases interface {
 	CreateUser(id, username, email, password string) error
@@ -12,11 +16,11 @@ type UseCases interface {
 }
 
 type authUseCases struct {
-	repo   auth.Repository
+	repo   Repository
 	config *config.Config
 }
 
-func NewAuthUseCases(repo auth.Repository, config *config.Config) UseCases {
+func NewAuthUseCases(repo Repository, config *config.Config) UseCases {
 	return &authUseCases{
 		repo:   repo,
 		config: config,
