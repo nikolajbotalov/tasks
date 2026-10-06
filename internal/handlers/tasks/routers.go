@@ -18,6 +18,6 @@ func SetupRouter(g *gin.Engine, db *sql.DB, cfg *config.Config, uc tasksUC.UseCa
 		tasksProtected.GET("/:id", GetByID(db))
 		tasksProtected.POST("", CreateTask(uc))
 		tasksProtected.PUT("/:id", UpdateTask(db))
-		tasksProtected.DELETE("/:id", DeleteTask(db))
+		tasksProtected.DELETE("/:id", DeleteTask(uc))
 	}
 }

@@ -10,4 +10,6 @@ var (
 	ErrHashedPassword     = errors.New("hashed password error")
 	ErrGetAuthorID        = errors.New("no author id or incorrect format")
 	ErrGetTasks           = errors.New("tasks unavailable")
+	ErrTaskNotFound       = errors.New("task not found")
+	ErrGetTaskID          = errors.New("no task id or incorrect format")
 )

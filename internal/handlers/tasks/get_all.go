@@ -15,7 +15,7 @@ func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, response.IncorrectAuthorID)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": response.IncorrectAuthorID})
 			return
 		}
 
@@ -23,11 +23,11 @@ func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
 		pageNumber, err := strconv.Atoi(page)
 		if err != nil {
 			fmt.Printf("parsing %s, invalid syntax: %v\n", page, err)
-			c.JSON(http.StatusBadRequest, response.InvalidPageParam)
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidPageParam})
 			return
 		}
 		if pageNumber < 1 {
-			c.JSON(http.StatusBadRequest, response.InvalidPageParam)
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidPageParam})
 			return
 		}
 
@@ -35,11 +35,11 @@ func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
 		limitNumber, err := strconv.Atoi(limit)
 		if err != nil {
 			fmt.Printf("parsing %s, invalid syntax: %v\n", limit, err)
-			c.JSON(http.StatusBadRequest, response.InvalidLimitParam)
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidLimitParam})
 			return
 		}
 		if limitNumber <= 0 || limitNumber > 100 {
-			c.JSON(http.StatusBadRequest, response.InvalidLimitParam)
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidLimitParam})
 			return
 		}
 
