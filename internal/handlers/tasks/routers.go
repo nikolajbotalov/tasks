@@ -14,7 +14,7 @@ func SetupRouter(g *gin.Engine, db *sql.DB, cfg *config.Config, uc tasksUC.UseCa
 	tasksProtected := g.Group("/api/tasks")
 	tasksProtected.Use(middleware.JWTAuthMiddleware(cfg))
 	{
-		tasksProtected.GET("", GetAll(db))
+		tasksProtected.GET("", GetAll(uc))
 		tasksProtected.GET("/:id", GetByID(db))
 		tasksProtected.POST("", CreateTask(uc))
 		tasksProtected.PUT("/:id", UpdateTask(db))

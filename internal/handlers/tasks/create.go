@@ -20,7 +20,7 @@ func CreateTask(uc tasksUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, response.FailedConvertAuthorID)
+			c.JSON(http.StatusUnauthorized, response.IncorrectAuthorID)
 			return
 		}
 
