@@ -36,7 +36,7 @@ func main() {
 	taskRepository := tasksRepo.NewTasksRepository(db)
 	tasksUseCases := tasksUC.NewTasksUseCases(taskRepository)
 
-	r := router.AppRouters(db, authUseCases, cfg, tasksUseCases)
+	r := router.AppRouters(authUseCases, cfg, tasksUseCases)
 
 	ctx := context.Background()
 
