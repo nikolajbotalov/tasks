@@ -1,25 +1,37 @@
 package tasks
 
 import (
+	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
-	"database/sql"
-	"log"
+	"TaskFlow/internal/handlers/helpers"
+	tasksUC "TaskFlow/internal/use-cases/tasks"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetByID(db *sql.DB) gin.HandlerFunc {
+func GetByID(uc tasksUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id := c.Param("id")
-
-		row := db.QueryRow("SELECT * FROM tasks WHERE id=$1", id)
-		t := domain.Task{}
-
-		if err := row.Scan(&t.ID, &t.Name, &t.Description, &t.CreatedAt, &t.UpdatedAt); err != nil {
-			log.Println(err)
+		id, err := helpers.GetTaskID(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
+			return
 		}
 
-		c.JSON(http.StatusOK, t)
+		task, err := uc.GetTaskByID(id)
+		if err != nil {
+			if errors.Is(err, domain.ErrTaskNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": response.TaskNotFound})
+				return
+			}
+
+			fmt.Printf("getting task %v, error: %v\n", id, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			return
+		}
+
+		c.JSON(http.StatusOK, task)
 	}
 }

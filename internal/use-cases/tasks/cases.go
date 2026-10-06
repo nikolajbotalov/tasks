@@ -8,12 +8,14 @@ import (
 
 type Repository interface {
 	GetTaskList(authorID uuid.UUID, page, limit int) ([]domain.Task, int, error)
+	GetTaskByID(id uuid.UUID) (domain.Task, error)
 	CreateTask(id, authorID uuid.UUID, name, description string) (domain.Task, error)
 	DeleteTask(id, authorID uuid.UUID) error
 }
 
 type UseCases interface {
 	GetAllTasks(authorID uuid.UUID, page, limit int) (domain.GetAllTasksResponse, error)
+	GetTaskByID(id uuid.UUID) (domain.Task, error)
 	CreateTask(authorID uuid.UUID, name, description string) (domain.Task, error)
 	DeleteTask(id, authorID uuid.UUID) error
 }

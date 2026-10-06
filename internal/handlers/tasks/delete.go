@@ -14,14 +14,13 @@ import (
 
 func DeleteTask(uc tasksUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, err := helpers.GetTaskID(c)
+		id, authorID, err := helpers.GetTaskAndAuthorIDs(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
-			return
-		}
+			if errors.Is(err, domain.ErrGetTaskID) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
+				return
+			}
 
-		authorID, err := helpers.GetAuthorID(c)
-		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": response.IncorrectAuthorID})
 			return
 		}
