@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CreateTaskRequest struct {
+type createTaskRequest struct {
 	Name        string `json:"name" binding:"required,min=2,max=255"`
 	Description string `json:"description" binding:"max=10000"`
 }
@@ -24,7 +24,7 @@ func CreateTask(uc tasksUC.UseCases) gin.HandlerFunc {
 			return
 		}
 
-		var requestTask CreateTaskRequest
+		var requestTask createTaskRequest
 		if err := c.ShouldBindJSON(&requestTask); err != nil {
 			validation.HandleBindError(c, err)
 			return

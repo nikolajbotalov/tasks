@@ -13,5 +13,6 @@ func SetupRoutes(r *gin.Engine, cfg *config.Config, uc commentsUC.UseCases) {
 	commentRoutes.Use(middleware.JWTAuthMiddleware(cfg))
 	{
 		commentRoutes.GET("/:id/comments", GetAllTaskComments(uc))
+		commentRoutes.POST("/:id/comments", CreateTaskComment(uc))
 	}
 }
