@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(g *gin.Engine, uc authUC.UseCases) {
+func SetupRoutes(g *gin.Engine, uc authUC.UseCases) {
 	authRouters := g.Group("/api/auth")
 	{
 		authRouters.POST("/register", RegisterUser(uc))

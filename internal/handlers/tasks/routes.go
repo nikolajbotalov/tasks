@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(g *gin.Engine, cfg *config.Config, uc tasksUC.UseCases) {
+func SetupRoutes(g *gin.Engine, cfg *config.Config, uc tasksUC.UseCases) {
 	tasksProtected := g.Group("/api/tasks")
 	tasksProtected.Use(middleware.JWTAuthMiddleware(cfg))
 	{

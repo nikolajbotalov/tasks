@@ -12,4 +12,7 @@ var (
 	ErrGetTasks           = errors.New("tasks unavailable")
 	ErrTaskNotFound       = errors.New("task not found")
 	ErrGetTaskID          = errors.New("no task id or incorrect format")
+	ErrGetComments        = errors.New("comments unavailable")
+	ErrInvalidPageParam   = errors.New("invalid page param or type")
+	ErrInvalidLimitParam  = errors.New("invalid limit param or type")
 )

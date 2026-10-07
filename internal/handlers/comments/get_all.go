@@ -1,22 +1,22 @@
-package tasks
+package comments
 
 import (
 	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
 	"TaskFlow/internal/handlers/helpers"
 	"TaskFlow/internal/handlers/pagination"
-	tasksUC "TaskFlow/internal/use-cases/tasks"
+	commentsUC "TaskFlow/internal/use-cases/comment"
 	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
+func GetAllTaskComments(uc commentsUC.UseCases) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authorID, err := helpers.GetAuthorID(c)
+		taskID, err := helpers.GetTaskID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": response.IncorrectAuthorID})
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
 			return
 		}
 
@@ -31,12 +31,12 @@ func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
 			return
 		}
 
-		tasks, err := uc.GetAllTasks(authorID, page, limit)
+		commentsRes, err := uc.GetCommentList(taskID, page, limit)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}
 
-		c.JSON(http.StatusOK, tasks)
+		c.JSON(http.StatusOK, commentsRes)
 	}
 }
