@@ -5,6 +5,7 @@ import (
 	router "TaskFlow/internal/delivery/http"
 	authRepo "TaskFlow/internal/repository/auth"
 	commentsRepo "TaskFlow/internal/repository/comment"
+	permissionsRepo "TaskFlow/internal/repository/permissions"
 	"TaskFlow/internal/repository/postgres"
 	tasksRepo "TaskFlow/internal/repository/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
@@ -12,6 +13,7 @@ import (
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -40,11 +42,17 @@ func main() {
 	commentsRepository := commentsRepo.NewCommentRepository(db)
 	commentsUseCases := commentsUC.NewCommentUseCases(commentsRepository)
 
-	r := router.AppRouters(authUseCases, cfg, tasksUseCases, commentsUseCases)
+	permissionsRepository := permissionsRepo.NewPermissionsRepository(db)
+	rolePermissions, err := permissionsRepository.GetAll()
+	if err != nil {
+		fmt.Printf("cannot load role permissions: %v\n", err)
+	}
+
+	r := router.AppRouters(authUseCases, cfg, tasksUseCases, commentsUseCases, rolePermissions)
 
 	ctx := context.Background()
 
-	if err = postgres.EnsureSchema(ctx, db, "tasks", "users", "task_comments"); err != nil {
+	if err = postgres.EnsureSchema(ctx, db, "tasks", "users", "task_comments", "roles", "role_permissions"); err != nil {
 		log.Printf("schema check failed: %v\n", err)
 	}
 

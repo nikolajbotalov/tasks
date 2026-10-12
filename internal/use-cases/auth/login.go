@@ -35,7 +35,7 @@ func (uc *authUseCases) LoginUser(email, password string) (domain.TokenPair, err
 		return domain.TokenPair{}, domain.ErrInternal
 	}
 
-	tokens, err := uc.generateTokenPair(user.ID)
+	tokens, err := uc.generateTokenPair(user.ID, user.Role)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf("failed to generate token pair: %w", err)
 	}

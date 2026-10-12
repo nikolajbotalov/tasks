@@ -8,7 +8,7 @@ import (
 )
 
 func GetAuthorID(c *gin.Context) (uuid.UUID, error) {
-	ctxAuthorID, ok := c.Get("id")
+	ctxAuthorID, ok := c.Get(domain.JWTID)
 	if !ok {
 		return uuid.Nil, domain.ErrGetAuthorID
 	}

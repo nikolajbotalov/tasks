@@ -12,4 +12,5 @@ const (
 	TaskNotFound       = "task not found"
 	TaskDeleted        = "task was deleted"
 	TaskUpdated        = "task was updated"
+	PermissionDenied   = "permission denied"
 )

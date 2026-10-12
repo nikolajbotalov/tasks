@@ -15,4 +15,5 @@ var (
 	ErrGetComments        = errors.New("comments unavailable")
 	ErrInvalidPageParam   = errors.New("invalid page param or type")
 	ErrInvalidLimitParam  = errors.New("invalid limit param or type")
+	ErrUnknownRole        = errors.New("unknown role")
 )

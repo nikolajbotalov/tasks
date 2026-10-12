@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"TaskFlow/internal/config"
+	"TaskFlow/internal/domain"
 	"fmt"
 	"net/http"
 	"strings"
@@ -29,24 +30,45 @@ func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			abort(c, "Invalid token")
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-
-		id, ok := claims["id"].(string)
+		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			abort(c, "Invalid token claims")
+			return
+		}
+
+		id, ok := claims[domain.JWTID].(string)
+		if !ok {
+			abort(c, "Invalid token claims")
+			return
+		}
+
+		roleStr, ok := claims[domain.JWTRole].(string)
+		if !ok {
+			abort(c, "Invalid token claims")
+			return
+		}
+
+		role := domain.Role(roleStr)
+		if !role.IsValid() {
+			abort(c, "Invalid token role")
 			return
 		}
 
 		idAsUUID, err := uuid.Parse(id)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Failed to parse uuid"})
+			abort(c, "Failed to parse uuid")
 			return
 		}
 
-		c.Set("id", idAsUUID)
+		c.Set(domain.JWTID, idAsUUID)
+		c.Set(domain.JWTRole, role)
 	}
+}
+
+func abort(c *gin.Context, errText string) {
+	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errText})
 }
