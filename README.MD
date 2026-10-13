@@ -101,6 +101,16 @@ GET    /api/tasks/:id/comments
 подключение к БД и запуск сервера — ошибка любого шага завершает процесс
 (fail-fast).
 
+### Подключение к БД
+
+Инициализацию и настройку подключения к PostgreSQL следует держать в отдельном
+файле (например, `internal/repository/postgres/connect.go`): создание `*sql.DB`,
+параметры пула (`SetMaxOpenConns`, `SetMaxIdleConns`, `SetConnMaxLifetime`) и
+проверка `Ping`. В `internal/app/app.go` этот конструктор вызывается, а
+полученный `*sql.DB` передаётся в репозитории. Пул открывается один раз и
+закрывается тоже один раз — в `App.Close()`, после остановки HTTP-сервера
+(не в конструкторе подключения).
+
 ---
 
 ## Текущее состояние
@@ -135,8 +145,12 @@ GET    /api/tasks/:id/comments
 6. **Swagger / OpenAPI** — отсутствует (валидация через
    `go-playground/validator` уже используется).
 7. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
-   «Конфигурация приложения»); осталось: graceful shutdown, CORS,
-   Docker/compose, тесты.
+   «Конфигурация приложения»), graceful shutdown реализован
+   (`internal/app/server.go`); осталось: CORS, Docker/compose, тесты.
+8. **Rate limiting / `429 Too Many Requests`** — ограничение частоты запросов
+   (в первую очередь на `/api/auth/login` — защита от перебора), ответ `429`
+   с заголовком `Retry-After` и единым телом `{"error": "…"}`; клиент при
+   `429` делает повтор с backoff, ориентируясь на `Retry-After`.
 
 ---
 
@@ -145,8 +159,9 @@ GET    /api/tasks/:id/comments
 - `config`: `env-required` не гарантирует непустоту значения, пришедшего из
   `.env`; обязательные секреты требуют явной проверки после загрузки.
 - `config` реализован как singleton (`sync.Once`) — осознанный выбор.
-- `role_permissions` загружаются не фатально: при сбое checker пуст, и все
-  защищённые маршруты отдают 403.
+- `repository/auth`: `FindUserByEmail` логирует через `fmt` и схлопывает
+  ошибку в `domain.ErrInternal` без `%w` — причину нужно оборачивать.
 - `context.Context` не прокинут в use-case/repository.
-- Логирование через `fmt`/`log`; переход на `log/slog` — отдельная задача.
-- Нет тестов; Docker/compose и graceful shutdown не подключены.
+- Логирование постепенно переводится на `log/slog`; ошибки пока передаются
+  строкой формата (`go vet` это отмечает).
+- Нет тестов; Docker/compose не подключены.

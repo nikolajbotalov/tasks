@@ -1,3 +1,28 @@
+### Register User
+POST http://localhost:8080/api/auth/register HTTP/2
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "test@example.com",
+  "username": "test",
+  "password": "test1234"
+}
+
+### Login User
+POST http://localhost:8080/api/auth/login HTTP/2
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "test@example.com",
+  "password": "test1234"
+}
+
+> {%
+    client.global.set("access_token", response.body.access_token)
+%}
+
 ### Get all tasks
 GET http://localhost:8080/api/tasks HTTP/2
 Accept: application/json
@@ -34,28 +59,3 @@ Authorization: Bearer {{access_token}}
 DELETE http://localhost:8080/api/tasks/93c76532-981d-4ba7-83c6-061554c5d679
 Accept: application/json
 Authorization: Bearer {{access_token}}
-
-### Register User
-POST http://localhost:8080/api/auth/register HTTP/2
-Content-Type: application/json
-Accept: application/json
-
-{
-  "email": "test@example.com",
-  "username": "test",
-  "password": "test1234"
-}
-
-### Login User
-POST http://localhost:8080/api/auth/login HTTP/2
-Content-Type: application/json
-Accept: application/json
-
-{
-  "email": "test1@example.com",
-  "password": "test1234"
-}
-
-> {%
-    client.global.set("access_token", response.body.access_token)
- %}
