@@ -15,22 +15,28 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	cfg := config.LoadConfig()
-
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres dbname=taskflow password=admin sslmode=disable")
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("read config: %v", err)
+	}
+
+	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		cfg.Database.DBHost, cfg.Database.DBPort, cfg.Database.DBName, cfg.Database.DBUser, cfg.Database.DBPassword, cfg.Database.DBSSLMode)
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatalf("connect db: %v", err)
 	}
 	defer db.Close()
 
 	err = db.Ping()
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("ping db: %v", err)
 	}
 
 	log.Println("Successfully connected to db")
@@ -45,7 +51,7 @@ func main() {
 	permissionsRepository := permissionsRepo.NewPermissionsRepository(db)
 	rolePermissions, err := permissionsRepository.GetAll()
 	if err != nil {
-		fmt.Printf("cannot load role permissions: %v\n", err)
+		log.Printf("load role permissions: %v\n", err)
 	}
 
 	r := router.AppRouters(authUseCases, cfg, tasksUseCases, commentsUseCases, rolePermissions)
@@ -53,8 +59,12 @@ func main() {
 	ctx := context.Background()
 
 	if err = postgres.EnsureSchema(ctx, db, "tasks", "users", "task_comments", "roles", "role_permissions"); err != nil {
-		log.Printf("schema check failed: %v\n", err)
+		log.Printf("schema check: %v\n", err)
 	}
 
-	r.Run()
+	appAddr := net.JoinHostPort(cfg.Listen.BindIP, cfg.Listen.Port)
+	err = r.Run(appAddr)
+	if err != nil {
+		log.Fatalf("start server: %v", err)
+	}
 }

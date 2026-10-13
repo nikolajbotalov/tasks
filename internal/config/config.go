@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -9,8 +11,9 @@ import (
 )
 
 type Config struct {
-	Listen Listen
-	JWT    JWTConfig
+	Listen   Listen
+	JWT      JWT
+	Database Database
 }
 
 type Listen struct {
@@ -18,24 +21,52 @@ type Listen struct {
 	Port   string `env:"PORT" env-default:"8080"`
 }
 
-type JWTConfig struct {
-	Secret          string        `env:"JWT_SECRET" env-default:"qvH5gTU8zDngVhxVxl2EORoi2Z9P6rgksNfqOiC8pQU"`
+type JWT struct {
+	Secret          string        `env:"JWT_SECRET" env-required:"true"`
 	AccessTokenTTL  time.Duration `env:"JWT_ACCESS_TTL" env-default:"24h"`
 	RefreshTokenTTL time.Duration `env:"JWT_REFRESH_TTL" env-default:"168h"`
 }
 
-var instance *Config
-var once sync.Once
+type Database struct {
+	DBHost     string `env:"DB_HOST" env-default:"localhost"`
+	DBPort     string `env:"DB_PORT" env-default:"5432"`
+	DBName     string `env:"DB_NAME" env-default:"taskflow"`
+	DBUser     string `env:"DB_USER" env-default:"postgres"`
+	DBPassword string `env:"DB_PASSWORD" env-required:"true"`
+	DBSSLMode  string `env:"DB_SSL_MODE" env-default:"disable"`
+}
 
-func LoadConfig() *Config {
+var (
+	instance *Config
+	once     sync.Once
+	initErr  error
+)
+
+func LoadConfig() (*Config, error) {
 	once.Do(func() {
 		instance = &Config{}
 
-		if err := cleanenv.ReadEnv(instance); err != nil {
-			fmt.Println("failed loading config", err.Error())
+		if err := cleanenv.ReadConfig(".env", instance); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				initErr = fmt.Errorf("read config: %w", err)
+				return
+			}
+
+			if err = cleanenv.ReadEnv(instance); err != nil {
+				initErr = fmt.Errorf("read env: %w", err)
+				return
+			}
 		}
+
+		var errs []error
+		if instance.JWT.Secret == "" {
+			errs = append(errs, errors.New("JWT_SECRET is empty"))
+		}
+		if instance.Database.DBPassword == "" {
+			errs = append(errs, errors.New("DB_PASSWORD is empty"))
+		}
+		initErr = errors.Join(errs...)
 	})
 
-	fmt.Println("config loaded")
-	return instance
+	return instance, initErr
 }
