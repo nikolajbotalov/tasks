@@ -39,7 +39,7 @@ func NewServer(
 
 	router.Use(SlogMiddleware(logger))
 
-	auth.SetupRoutes(router, authUc)
+	auth.SetupRoutes(router, authUc, logger)
 	tasks.SetupRoutes(router, cfg, tasksUc, checker)
 	comments.SetupRoutes(router, cfg, commentsUC, checker)
 
@@ -62,7 +62,7 @@ func (s *Server) Run() {
 
 	go func() {
 		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			s.logger.Error("listen: %s\n", err)
+			s.logger.Error("listen", slog.String("error", err.Error()))
 		}
 	}()
 
@@ -76,7 +76,7 @@ func (s *Server) Run() {
 	defer cancel()
 
 	if err := s.httpServer.Shutdown(ctx); err != nil {
-		s.logger.Error("server shutdown: %s\n", err)
+		s.logger.Error("server shutdown", slog.String("error", err.Error()))
 	}
 
 	s.logger.Info("server exiting")

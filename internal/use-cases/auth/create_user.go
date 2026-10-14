@@ -15,19 +15,16 @@ func (uc *authUseCases) CreateUser(id, username, email, password string) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		fmt.Printf("failed to hash password, email: %v\n", lowerEmail)
-		return domain.ErrHashedPassword
+		return fmt.Errorf("%v: %w", domain.ErrHashedPassword, err)
 	}
 
 	err = uc.repo.CreateUser(id, username, lowerEmail, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, domain.ErrEmailExists) {
-			fmt.Printf("user %v with email %v, cannot creating\n", username, lowerEmail)
-			return domain.ErrEmailExists
+			return fmt.Errorf("%v: %w", domain.ErrEmailExists, err)
 		}
 
-		fmt.Printf("failed to create user %v, with email: %v\n", username, err)
-		return domain.ErrInternal
+		return fmt.Errorf("create user: %w", err)
 	}
 
 	return nil

@@ -16,28 +16,24 @@ func (uc *authUseCases) LoginUser(email, password string) (domain.TokenPair, err
 	user, err := uc.repo.FindUserByEmail(lowerEmail)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
-			fmt.Printf("user with email %s not found by error: %v\n", email, err)
 			return domain.TokenPair{}, domain.ErrInvalidCredentials
 		}
 
-		fmt.Printf("failed to find user with email %s by error: %v\n", email, err)
-		return domain.TokenPair{}, domain.ErrInternal
+		return domain.TokenPair{}, fmt.Errorf("login: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			fmt.Println(err)
 			return domain.TokenPair{}, domain.ErrInvalidCredentials
 		}
 
-		fmt.Println(err)
-		return domain.TokenPair{}, domain.ErrInternal
+		return domain.TokenPair{}, fmt.Errorf("compare password: %w", err)
 	}
 
 	tokens, err := uc.generateTokenPair(user.ID, user.Role)
 	if err != nil {
-		return domain.TokenPair{}, fmt.Errorf("failed to generate token pair: %w", err)
+		return domain.TokenPair{}, fmt.Errorf("generate token pair: %w", err)
 	}
 
 	return tokens, nil

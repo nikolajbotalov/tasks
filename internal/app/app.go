@@ -28,7 +28,7 @@ func NewApp() (*App, error) {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		logger.Error("read config: %v", err)
+		logger.Error("read config", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -36,7 +36,7 @@ func NewApp() (*App, error) {
 		cfg.Database.DBHost, cfg.Database.DBPort, cfg.Database.DBName, cfg.Database.DBUser, cfg.Database.DBPassword, cfg.Database.DBSSLMode)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		logger.Error("connect db: %v", err)
+		logger.Error("connect db", slog.String("error", err.Error()))
 		return nil, err
 	}
 	db.SetMaxOpenConns(25)
@@ -45,7 +45,7 @@ func NewApp() (*App, error) {
 
 	err = db.Ping()
 	if err != nil {
-		logger.Error("ping db: %v", err)
+		logger.Error("ping db", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func NewApp() (*App, error) {
 	permissionsRepository := permissionsRepo.NewPermissionsRepository(db)
 	rolePermissions, err := permissionsRepository.GetAll()
 	if err != nil {
-		logger.Error("load role permissions: %v", err)
+		logger.Error("load role permissions", slog.String("error", err.Error()))
 		return nil, err
 	}
 
@@ -76,6 +76,6 @@ func NewApp() (*App, error) {
 func (a *App) Close() {
 	a.Logger.Info("closing app")
 	if err := a.DB.Close(); err != nil {
-		a.Logger.Error("close db: %v", err)
+		a.Logger.Error("close db", slog.String("error", err.Error()))
 	}
 }

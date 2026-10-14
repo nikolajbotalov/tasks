@@ -15,12 +15,10 @@ func (r *authRepository) CreateUser(id, username, email, password string) error 
 		id, email, username, password, curTime, curTime).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Printf("user with email %v already exists\n", email)
 			return domain.ErrEmailExists
 		}
 
-		fmt.Printf("failed to insert user with email %s by error: %v\n", email, err)
-		return domain.ErrInternal
+		return fmt.Errorf("insert user: %w", err)
 	}
 
 	return nil

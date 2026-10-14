@@ -6,13 +6,13 @@ import (
 	"TaskFlow/internal/handlers/validation"
 	authUC "TaskFlow/internal/use-cases/auth"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func LoginUser(uc authUC.UseCases) gin.HandlerFunc {
+func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest domain.LoginUserRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
@@ -24,11 +24,10 @@ func LoginUser(uc authUC.UseCases) gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, domain.ErrInvalidCredentials) {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": response.InvalidCredentials})
-				fmt.Printf("incorrect user email %s by error: %v\n", loginRequest.Email, err)
 				return
 			}
 
-			fmt.Printf("failed to login user with email %s by error: %v\n", loginRequest.Email, err)
+			logger.Error("login", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}
