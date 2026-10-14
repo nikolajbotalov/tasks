@@ -7,12 +7,13 @@ import (
 	"TaskFlow/internal/handlers/pagination"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
+func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
@@ -33,6 +34,7 @@ func GetAll(uc tasksUC.UseCases) gin.HandlerFunc {
 
 		tasks, err := uc.GetAllTasks(authorID, page, limit)
 		if err != nil {
+			logger.Error("get task list", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}

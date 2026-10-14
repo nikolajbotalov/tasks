@@ -40,8 +40,8 @@ func NewServer(
 	router.Use(SlogMiddleware(logger))
 
 	auth.SetupRoutes(router, authUc, logger)
-	tasks.SetupRoutes(router, cfg, tasksUc, checker)
-	comments.SetupRoutes(router, cfg, commentsUC, checker)
+	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)
+	comments.SetupRoutes(router, cfg, commentsUC, checker, logger)
 
 	appAddr := net.JoinHostPort(cfg.Listen.BindIP, cfg.Listen.Port)
 

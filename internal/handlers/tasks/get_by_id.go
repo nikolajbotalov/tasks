@@ -6,13 +6,13 @@ import (
 	"TaskFlow/internal/handlers/helpers"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func GetByID(uc tasksUC.UseCases) gin.HandlerFunc {
+func GetByID(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
 		if err != nil {
@@ -27,7 +27,7 @@ func GetByID(uc tasksUC.UseCases) gin.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("getting task %v, error: %v\n", id, err)
+			logger.Error("get task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}

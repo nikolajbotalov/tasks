@@ -2,7 +2,6 @@ package validation
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +18,5 @@ func HandleBindError(c *gin.Context, err error) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errs})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-		fmt.Println(err.Error())
 	}
 }

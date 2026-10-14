@@ -7,7 +7,7 @@ import (
 	"TaskFlow/internal/handlers/validation"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ type UpdateTaskRequest struct {
 	Description *string `json:"description" binding:"omitempty,max=10000"`
 }
 
-func UpdateTask(uc tasksUC.UseCases) gin.HandlerFunc {
+func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
 		if err != nil {
@@ -39,7 +39,7 @@ func UpdateTask(uc tasksUC.UseCases) gin.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("update task %s: %v\n", id, err)
+			logger.Error("update task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}

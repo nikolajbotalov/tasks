@@ -7,7 +7,7 @@ import (
 	"TaskFlow/internal/handlers/validation"
 	commentsUC "TaskFlow/internal/use-cases/comment"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +17,7 @@ type createCommentRequest struct {
 	Text string `json:"text" binding:"required,min=2,max=10000"`
 }
 
-func CreateTaskComment(uc commentsUC.UseCases) gin.HandlerFunc {
+func CreateTaskComment(uc commentsUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		taskID, authorID, err := helpers.GetTaskAndAuthorIDs(c)
 		if err != nil {
@@ -43,7 +43,7 @@ func CreateTaskComment(uc commentsUC.UseCases) gin.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("create comment for task %s, reason: %v\n", taskID, err)
+			logger.Error("create task comment", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}

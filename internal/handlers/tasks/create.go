@@ -5,7 +5,7 @@ import (
 	"TaskFlow/internal/handlers/helpers"
 	"TaskFlow/internal/handlers/validation"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +16,7 @@ type createTaskRequest struct {
 	Description string `json:"description" binding:"max=10000"`
 }
 
-func CreateTask(uc tasksUC.UseCases) gin.HandlerFunc {
+func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
@@ -32,7 +32,7 @@ func CreateTask(uc tasksUC.UseCases) gin.HandlerFunc {
 
 		task, err := uc.CreateTask(authorID, requestTask.Name, requestTask.Description)
 		if err != nil {
-			fmt.Printf("Create task %s, reason: %v\n", requestTask.Name, err)
+			logger.Error("create task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.CreateTask})
 			return
 		}

@@ -6,13 +6,13 @@ import (
 	"TaskFlow/internal/handlers/helpers"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"errors"
-	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func DeleteTask(uc tasksUC.UseCases) gin.HandlerFunc {
+func DeleteTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, authorID, err := helpers.GetTaskAndAuthorIDs(c)
 		if err != nil {
@@ -32,7 +32,7 @@ func DeleteTask(uc tasksUC.UseCases) gin.HandlerFunc {
 				return
 			}
 
-			fmt.Printf("delete task %v, reason: %v\n", id, err)
+			logger.Error("delete task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
 			return
 		}

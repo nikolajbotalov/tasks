@@ -8,7 +8,8 @@ import (
 )
 
 func (r *tasksRepository) GetTaskList(authorID uuid.UUID, page, limit int) ([]domain.Task, int, error) {
-	rows, err := r.db.Query("SELECT id, name, description, created_at, updated_at, author_id FROM tasks WHERE author_id = $1 LIMIT $2 OFFSET $3", authorID.String(), limit, (page-1)*limit)
+	rows, err := r.db.Query("SELECT id, name, description, created_at, updated_at, author_id FROM tasks WHERE author_id = $1 LIMIT $2 OFFSET $3",
+		authorID.String(), limit, (page-1)*limit)
 	if err != nil {
 		return []domain.Task{}, 0, fmt.Errorf("%w: %w", domain.ErrGetTasks, err)
 	}
@@ -20,7 +21,7 @@ func (r *tasksRepository) GetTaskList(authorID uuid.UUID, page, limit int) ([]do
 		t := domain.Task{}
 		err = rows.Scan(&t.ID, &t.Name, &t.Description, &t.CreatedAt, &t.UpdatedAt, &t.AuthorID)
 		if err != nil {
-			return []domain.Task{}, 0, fmt.Errorf("get tasks: %w", err)
+			return []domain.Task{}, 0, fmt.Errorf("scan task %s: %w", t.ID, err)
 		}
 		tasks = append(tasks, t)
 	}
