@@ -57,6 +57,10 @@ POST   /api/tasks/:id/comments
 GET    /api/tasks/:id/comments
 ```
 
+Все маршруты `/api/tasks…` требуют заголовок `Authorization: Bearer <token>` и
+соответствующее право (`task:*`/`comment:*`). Пагинация: `page ≥ 1`,
+`1 ≤ limit ≤ 100` (по умолчанию 10).
+
 ---
 
 ### Что это даёт тебе
@@ -97,11 +101,16 @@ GET    /api/tasks/:id/comments
 2. Заполнить `JWT_SECRET` и `DB_PASSWORD` (остальное — при необходимости).
 3. Запустить: `go run .`
 
-Сервер поднимается на `http://<BIND_IP>:<PORT>`. При старте проверяются конфиг,
-подключение к БД и запуск сервера — ошибка любого шага завершает процесс
-(fail-fast).
+Сервер поднимается на `http://<BIND_IP>:<PORT>`. При старте fail-fast завершают
+ошибки загрузки конфига, подключения к БД (`Open`/`Ping`) и загрузки
+`role_permissions`; сбой `ListenAndServe` логируется, но процесс продолжает
+работу до сигнала остановки.
 
 ### Подключение к БД
+
+> Текущее состояние: создание `*sql.DB`, параметры пула и `Ping` находятся в
+> `internal/app/app.go`; вынос в `internal/repository/postgres/connect.go` —
+> планируемый рефакторинг.
 
 Инициализацию и настройку подключения к PostgreSQL следует держать в отдельном
 файле (например, `internal/repository/postgres/connect.go`): создание `*sql.DB`,
@@ -130,6 +139,13 @@ GET    /api/tasks/:id/comments
    `role_permissions`, middleware `RequirePermission`.
 5. **Инфраструктура** — слои repository/usecase, пакет `config`, `.gitignore`,
    git-репозиторий.
+6. **Логирование** — `log/slog` (JSON в stdout), access-лог `SlogMiddleware`
+   (`method`, `path`, `query`, `status`, `latency`, `client_ip`, `body_size`),
+   логирование неожиданных сбоев на уровне `error` в хендлерах. Репозитории и
+   use-case не логируют — только оборачивают ошибку через `%w`.
+7. **Отказоустойчивость** — graceful shutdown по `SIGINT`/`SIGTERM`
+   (`internal/app/server.go`); fail-fast при старте: загрузка конфига,
+   подключение к БД, загрузка `role_permissions`.
 
 ### Осталось (по MVP)
 
@@ -145,8 +161,10 @@ GET    /api/tasks/:id/comments
 6. **Swagger / OpenAPI** — отсутствует (валидация через
    `go-playground/validator` уже используется).
 7. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
-   «Конфигурация приложения»), graceful shutdown реализован
-   (`internal/app/server.go`); осталось: CORS, Docker/compose, тесты.
+   «Конфигурация приложения»), graceful shutdown и fail-fast на старте
+   реализованы (`internal/app/server.go`); осталось: CORS, Docker/compose,
+   тесты, вынос настройки пула соединений в
+   `internal/repository/postgres/connect.go`.
 8. **Rate limiting / `429 Too Many Requests`** — ограничение частоты запросов
    (в первую очередь на `/api/auth/login` — защита от перебора), ответ `429`
    с заголовком `Retry-After` и единым телом `{"error": "…"}`; клиент при
@@ -157,11 +175,15 @@ GET    /api/tasks/:id/comments
 ## Известные слабые места
 
 - `config`: `env-required` не гарантирует непустоту значения, пришедшего из
-  `.env`; обязательные секреты требуют явной проверки после загрузки.
+  `.env`; поэтому `JWT_SECRET` и `DB_PASSWORD` дополнительно проверяются явно
+  после загрузки (`internal/config/config.go`).
 - `config` реализован как singleton (`sync.Once`) — осознанный выбор.
-- `repository/auth`: `FindUserByEmail` логирует через `fmt` и схлопывает
-  ошибку в `domain.ErrInternal` без `%w` — причину нужно оборачивать.
+- `EnsureSchema` (`internal/repository/postgres/schema.go`) нигде не вызывается —
+  мёртвый код; схема создаётся вручную, `golang-migrate` не подключён.
 - `context.Context` не прокинут в use-case/repository.
-- Логирование постепенно переводится на `log/slog`; ошибки пока передаются
-  строкой формата (`go vet` это отмечает).
+- `SlogMiddleware` (`internal/app/server.go`): ветка `c.Errors` не используется
+  (никто не вызывает `c.Error`), не проставляется request id, `query`
+  логируется без фильтрации.
+- Настройка пула соединений находится в `internal/app/app.go`, а не в
+  `internal/repository/postgres/connect.go` (см. раздел «Подключение к БД»).
 - Нет тестов; Docker/compose не подключены.
