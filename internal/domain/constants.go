@@ -1,4 +1,9 @@
 package domain
 
-const JWTID = "id"
-const JWTRole = "role"
+const (
+	JWTID               = "id"
+	JWTRole             = "role"
+	TaskAssigneeIDParam = "assignee_id"
+	TaskStatusParam     = "status"
+	TaskPriorityParam   = "priority"
+)

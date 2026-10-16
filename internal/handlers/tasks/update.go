@@ -11,11 +11,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type UpdateTaskRequest struct {
-	Name        *string `json:"name" binding:"omitempty,min=2,max=255"`
-	Description *string `json:"description" binding:"omitempty,max=10000"`
+	AssigneeID  uuid.UUID `json:"assignee_id"`
+	Status      *string   `json:"status,omitempty"`
+	Priority    *string   `json:"priority,omitempty"`
+	Name        *string   `json:"name,omitempty" binding:"min=2,max=255"`
+	Description *string   `json:"description,omitempty" binding:"max=10000"`
 }
 
 func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
@@ -26,13 +30,13 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		var taskRequest UpdateTaskRequest
-		if err = c.ShouldBindJSON(&taskRequest); err != nil {
+		var req UpdateTaskRequest
+		if err = c.ShouldBindJSON(&req); err != nil {
 			validation.HandleBindError(c, err)
 			return
 		}
 
-		err = uc.UpdateTask(id, taskRequest.Name, taskRequest.Description)
+		err = uc.UpdateTask(id, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
 				c.JSON(http.StatusNotFound, gin.H{"error": response.TaskNotFound})

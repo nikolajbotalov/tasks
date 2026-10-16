@@ -13,6 +13,9 @@ type Task struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	AuthorID    uuid.UUID `json:"author_id"`
+	AssigneeID  uuid.UUID `json:"assignee_id"`
+	Status      *string   `json:"status"`
+	Priority    *string   `json:"priority"`
 }
 
 type GetAllTasksResponse struct {

@@ -7,18 +7,30 @@ import (
 )
 
 type Repository interface {
-	GetTaskList(authorID uuid.UUID, page, limit int) ([]domain.Task, int, error)
+	GetTaskList(
+		authorID uuid.UUID,
+		assigneeID *uuid.UUID,
+		status domain.TaskStatus,
+		priority domain.TaskPriority,
+		page, limit int,
+	) ([]domain.Task, int, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
-	CreateTask(id, authorID uuid.UUID, name, description string) (domain.Task, error)
-	UpdateTask(id uuid.UUID, name, description *string) error
+	CreateTask(id, authorID, assigneeID uuid.UUID, name, description, priority string, status *string) (domain.Task, error)
+	UpdateTask(id, assigneeID uuid.UUID, name, description, status, priority *string) error
 	DeleteTask(id, authorID uuid.UUID) error
 }
 
 type UseCases interface {
-	GetAllTasks(authorID uuid.UUID, page, limit int) (domain.GetAllTasksResponse, error)
+	GetAllTasks(
+		authorID uuid.UUID,
+		assigneeID *uuid.UUID,
+		status domain.TaskStatus,
+		priority domain.TaskPriority,
+		page, limit int,
+	) (domain.GetAllTasksResponse, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
-	CreateTask(authorID uuid.UUID, name, description string) (domain.Task, error)
-	UpdateTask(id uuid.UUID, name, description *string) error
+	CreateTask(authorID, assigneeID uuid.UUID, name, description, status, priority string) (domain.Task, error)
+	UpdateTask(id, assigneeID uuid.UUID, name, description, status, priority *string) error
 	DeleteTask(id, authorID uuid.UUID) error
 }
 

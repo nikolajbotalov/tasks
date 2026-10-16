@@ -9,11 +9,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type createTaskRequest struct {
-	Name        string `json:"name" binding:"required,min=2,max=255"`
-	Description string `json:"description" binding:"max=10000"`
+	AssigneeID  uuid.UUID `json:"assignee_id,omitempty"`
+	Status      string    `json:"status,omitempty"`
+	Priority    string    `json:"priority,omitempty"`
+	Name        string    `json:"name" binding:"required,min=2,max=255"`
+	Description string    `json:"description" binding:"max=10000"`
 }
 
 func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
@@ -24,13 +28,13 @@ func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		var requestTask createTaskRequest
-		if err := c.ShouldBindJSON(&requestTask); err != nil {
+		var req createTaskRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
 			validation.HandleBindError(c, err)
 			return
 		}
 
-		task, err := uc.CreateTask(authorID, requestTask.Name, requestTask.Description)
+		task, err := uc.CreateTask(authorID, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			logger.Error("create task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.CreateTask})

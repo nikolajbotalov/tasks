@@ -28,6 +28,16 @@ GET http://localhost:8080/api/tasks HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
+### Get all tasks with "to_do" status
+GET http://localhost:8080/api/tasks?status=TO_DO HTTP/2
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Get all tasks with "low" priority
+GET http://localhost:8080/api/tasks?priority=low HTTP/2
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
 ### Get task by ID
 GET http://localhost:8080/api/tasks/2d43043c-a49e-407c-b955-0b82f76073a2
 Accept: application/json
@@ -41,18 +51,19 @@ Authorization: Bearer {{access_token}}
 
 {
   "name": "task 1",
-  "description": "description ашкые task"
+  "description": "description first task"
 }
 
 ### Update task
-PUT http://localhost:8080/api/tasks/5d43d8f3-155f-40fc-b0af-37bd10bcb1d5
+PUT http://localhost:8080/api/tasks/82af17ab-d4e7-4302-82e0-c07f2901f3ae
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 {
   "name": "task 5",
-  "description": "description fifth task"
+  "description": "description fifth task",
+  "status": "IN_PROGRESS"
 }
 
 ### Delete Task

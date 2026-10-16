@@ -8,13 +8,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *tasksRepository) UpdateTask(id uuid.UUID, name, description *string) error {
+func (r *tasksRepository) UpdateTask(id, assigneeID uuid.UUID, name, description, status, priority *string) error {
+	upperStatus := TaskStatusToUpper(status)
 	res, err := r.db.Exec(
 		`UPDATE tasks 
 				SET name = COALESCE($1, name), 
-				    description = COALESCE($2, description), 
-				    updated_at = $3
-				WHERE id = $4`, name, description, time.Now(), id)
+				    description = COALESCE($2, description),
+				    assignee_id = COALESCE($3, assignee_id),
+				    status = COALESCE($4, status),
+				    priority = COALESCE($5, priority),
+				    updated_at = $6
+				WHERE id = $7`, name, description, assigneeID, upperStatus, priority, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("update task %s: %w", id, err)
 	}

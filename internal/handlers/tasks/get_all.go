@@ -21,6 +21,24 @@ func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
+		assigneeID, err := helpers.GetTaskAssigneeID(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskAssigneeIDParam})
+			return
+		}
+
+		taskStatus, err := helpers.GetTaskStatus(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskStatusParam})
+			return
+		}
+
+		taskPriority, err := helpers.GetTaskPriority(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskPriorityParam})
+			return
+		}
+
 		page, limit, err := pagination.GetPaginationParams(c)
 		if err != nil {
 			if errors.Is(err, domain.ErrInvalidPageParam) {
@@ -32,7 +50,7 @@ func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		tasks, err := uc.GetAllTasks(authorID, page, limit)
+		tasks, err := uc.GetAllTasks(authorID, assigneeID, taskStatus, taskPriority, page, limit)
 		if err != nil {
 			logger.Error("get task list", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
