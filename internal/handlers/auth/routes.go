@@ -8,7 +8,7 @@ import (
 )
 
 func SetupRoutes(g *gin.Engine, uc authUC.UseCases, logger *slog.Logger) {
-	authRouters := g.Group("/api/auth")
+	authRouters := g.Group("/api/v1/auth")
 	{
 		authRouters.POST("/register", RegisterUser(uc, logger))
 		authRouters.POST("/login", LoginUser(uc, logger))

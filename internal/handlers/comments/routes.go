@@ -17,7 +17,7 @@ func SetupRoutes(
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
-	commentRoutes := r.Group("/api/tasks")
+	commentRoutes := r.Group("/api/v1/tasks")
 	commentRoutes.Use(middleware.JWTAuthMiddleware(cfg))
 	{
 		commentRoutes.GET("/:id/comments",

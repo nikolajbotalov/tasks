@@ -17,7 +17,7 @@ func SetupRoutes(
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
-	tasksProtected := r.Group("/api/tasks")
+	tasksProtected := r.Group("/api/v1/tasks")
 	tasksProtected.Use(middleware.JWTAuthMiddleware(cfg))
 	{
 		tasksProtected.GET("",
