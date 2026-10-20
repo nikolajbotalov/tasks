@@ -17,18 +17,23 @@ func SetupRoutes(
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
+	const (
+		limit = 10
+		burst = 20
+	)
+
 	tasksProtected := r.Group("/api/v1/tasks")
 	tasksProtected.Use(middleware.JWTAuthMiddleware(cfg))
 	{
-		tasksProtected.GET("",
+		tasksProtected.GET("", middleware.RateLimiter(limit, burst),
 			middleware.RequirePermission(checker, domain.PermissionTaskRead), GetAll(uc, logger))
-		tasksProtected.GET("/:id",
+		tasksProtected.GET("/:id", middleware.RateLimiter(limit, burst),
 			middleware.RequirePermission(checker, domain.PermissionTaskRead), GetByID(uc, logger))
-		tasksProtected.POST("",
+		tasksProtected.POST("", middleware.RateLimiter(limit, burst),
 			middleware.RequirePermission(checker, domain.PermissionTaskCreate), CreateTask(uc, logger))
-		tasksProtected.PUT("/:id",
+		tasksProtected.PUT("/:id", middleware.RateLimiter(limit, burst),
 			middleware.RequirePermission(checker, domain.PermissionTaskUpdate), UpdateTask(uc, logger))
-		tasksProtected.DELETE("/:id",
+		tasksProtected.DELETE("/:id", middleware.RateLimiter(limit, burst),
 			middleware.RequirePermission(checker, domain.PermissionTaskDelete), DeleteTask(uc, logger))
 	}
 }

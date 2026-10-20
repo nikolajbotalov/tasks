@@ -14,6 +14,7 @@ type Config struct {
 	Listen   Listen
 	JWT      JWT
 	Database Database
+	CORS     CORS
 }
 
 type Listen struct {
@@ -33,6 +34,11 @@ type Database struct {
 	DBUser     string `env:"DB_USER" env-default:"postgres"`
 	DBPassword string `env:"DB_PASSWORD" env-required:"true"`
 	DBSSLMode  string `env:"DB_SSL_MODE" env-default:"disable"`
+}
+
+type CORS struct {
+	AllowedOrigins string `env:"CORS_ALLOWED_ORIGINS"`
+	AllowedMethods string `env:"CORS_ALLOWED_METHODS"`
 }
 
 var (
@@ -63,6 +69,12 @@ func LoadConfig() (*Config, error) {
 		}
 		if instance.Database.DBPassword == "" {
 			errs = append(errs, errors.New("DB_PASSWORD is empty"))
+		}
+		if instance.CORS.AllowedOrigins == "" {
+			errs = append(errs, errors.New("CORS_ALLOWED_ORIGINS is empty"))
+		}
+		if instance.CORS.AllowedMethods == "" {
+			errs = append(errs, errors.New("CORS_ALLOWED_METHODS is empty"))
 		}
 		initErr = errors.Join(errs...)
 	})

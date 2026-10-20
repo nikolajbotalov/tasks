@@ -19,6 +19,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -37,8 +38,19 @@ func NewServer(
 ) *Server {
 	router := gin.New()
 
-	router.Use(SlogMiddleware(logger))
 	router.Use(gin.Recovery())
+	router.Use(SlogMiddleware(logger))
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: splitAndTrimCORS(cfg.CORS.AllowedOrigins),
+		AllowMethods: splitAndTrimCORS(cfg.CORS.AllowedMethods),
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		MaxAge:       12 * time.Hour,
+	}))
+
+	err := router.SetTrustedProxies(nil)
+	if err != nil {
+		logger.Error("set trusted proxies", slog.String("error", err.Error()))
+	}
 
 	auth.SetupRoutes(router, authUc, logger)
 	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)
