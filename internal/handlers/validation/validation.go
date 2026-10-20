@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"TaskFlow/internal/delivery/response"
 	"errors"
 	"net/http"
 
@@ -17,6 +18,6 @@ func HandleBindError(c *gin.Context, err error) {
 		}
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": errs})
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidRequestBody})
 	}
 }

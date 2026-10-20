@@ -7,10 +7,5 @@ import (
 )
 
 func (uc *tasksUseCases) GetTaskByID(id uuid.UUID) (domain.Task, error) {
-	task, err := uc.repo.GetTaskByID(id)
-	if err != nil {
-		return domain.Task{}, err
-	}
-
-	return task, nil
+	return uc.repo.GetTaskByID(id)
 }

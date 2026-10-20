@@ -5,10 +5,5 @@ import (
 )
 
 func (uc *tasksUseCases) DeleteTask(id, authorID uuid.UUID) error {
-	err := uc.repo.DeleteTask(id, authorID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return uc.repo.DeleteTask(id, authorID)
 }

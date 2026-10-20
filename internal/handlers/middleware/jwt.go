@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"TaskFlow/internal/config"
+	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
 	"fmt"
 	"net/http"
@@ -13,14 +14,16 @@ import (
 )
 
 func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+	const bearerPrefix = "Bearer "
+
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+		if authHeader == "" || !strings.HasPrefix(authHeader, bearerPrefix) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": response.AuthorizationHeaderMissing})
 			return
 		}
 
-		tokenString := authHeader[len("Bearer "):]
+		tokenString := authHeader[len(bearerPrefix):]
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if token.Method != jwt.SigningMethodHS256 {
@@ -30,37 +33,37 @@ func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			abort(c, "Invalid token")
+			abortUnauthorized(c, response.InvalidToken)
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			abort(c, "Invalid token claims")
+			abortUnauthorized(c, response.InvalidTokenClaims)
 			return
 		}
 
 		id, ok := claims[domain.JWTID].(string)
 		if !ok {
-			abort(c, "Invalid token claims")
+			abortUnauthorized(c, response.InvalidTokenClaims)
 			return
 		}
 
 		roleStr, ok := claims[domain.JWTRole].(string)
 		if !ok {
-			abort(c, "Invalid token claims")
+			abortUnauthorized(c, response.InvalidTokenClaims)
 			return
 		}
 
 		role := domain.Role(roleStr)
 		if !role.IsValid() {
-			abort(c, "Invalid token role")
+			abortUnauthorized(c, response.InvalidTokenRole)
 			return
 		}
 
 		idAsUUID, err := uuid.Parse(id)
 		if err != nil {
-			abort(c, "Failed to parse uuid")
+			abortUnauthorized(c, response.InvalidTokenClaims)
 			return
 		}
 
@@ -69,6 +72,6 @@ func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-func abort(c *gin.Context, errText string) {
-	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": errText})
+func abortUnauthorized(c *gin.Context, message string) {
+	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": message})
 }

@@ -16,7 +16,7 @@ type Repository interface {
 	) ([]domain.Task, int, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
 	CreateTask(id, authorID, assigneeID uuid.UUID, name, description, priority string, status *string) (domain.Task, error)
-	UpdateTask(id, assigneeID uuid.UUID, name, description, status, priority *string) error
+	UpdateTask(id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
 	DeleteTask(id, authorID uuid.UUID) error
 }
 
@@ -30,7 +30,7 @@ type UseCases interface {
 	) (domain.GetAllTasksResponse, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
 	CreateTask(authorID, assigneeID uuid.UUID, name, description, status, priority string) (domain.Task, error)
-	UpdateTask(id, assigneeID uuid.UUID, name, description, status, priority *string) error
+	UpdateTask(id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
 	DeleteTask(id, authorID uuid.UUID) error
 }
 

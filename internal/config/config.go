@@ -22,9 +22,8 @@ type Listen struct {
 }
 
 type JWT struct {
-	Secret          string        `env:"JWT_SECRET" env-required:"true"`
-	AccessTokenTTL  time.Duration `env:"JWT_ACCESS_TTL" env-default:"24h"`
-	RefreshTokenTTL time.Duration `env:"JWT_REFRESH_TTL" env-default:"168h"`
+	Secret         string        `env:"JWT_SECRET" env-required:"true"`
+	AccessTokenTTL time.Duration `env:"JWT_ACCESS_TTL" env-default:"24h"`
 }
 
 type Database struct {

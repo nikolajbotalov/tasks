@@ -24,6 +24,5 @@ func (r *tasksRepository) GetTaskByID(id uuid.UUID) (domain.Task, error) {
 		return domain.Task{}, fmt.Errorf("get task %s: %w", id.String(), err)
 	}
 
-	t.Status = TaskStatusToLower(t.Status)
 	return t, nil
 }

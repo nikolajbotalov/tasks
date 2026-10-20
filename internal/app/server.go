@@ -38,6 +38,7 @@ func NewServer(
 	router := gin.New()
 
 	router.Use(SlogMiddleware(logger))
+	router.Use(gin.Recovery())
 
 	auth.SetupRoutes(router, authUc, logger)
 	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)

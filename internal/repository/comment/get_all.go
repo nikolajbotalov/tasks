@@ -13,7 +13,7 @@ func (r *commentRepository) GetCommentList(taskID uuid.UUID, page, limit int) ([
 				FROM task_comments c JOIN users u ON u.id = c.author_id
 				WHERE c.task_id = $1 ORDER BY c.created_at LIMIT $2 OFFSET $3`, taskID, limit, (page-1)*limit)
 	if err != nil {
-		return []domain.TaskComment{}, 0, fmt.Errorf("%w: %w", domain.ErrGetComments, err)
+		return []domain.TaskComment{}, 0, fmt.Errorf("query comments for task  %s: %w", taskID, err)
 	}
 
 	defer rows.Close()
@@ -23,18 +23,18 @@ func (r *commentRepository) GetCommentList(taskID uuid.UUID, page, limit int) ([
 		comment := domain.TaskComment{}
 		err = rows.Scan(&comment.ID, &comment.TaskID, &comment.AuthorID, &comment.AuthorName, &comment.Text, &comment.CreatedAt)
 		if err != nil {
-			return []domain.TaskComment{}, 0, fmt.Errorf("%w: %w", domain.ErrGetComments, err)
+			return []domain.TaskComment{}, 0, fmt.Errorf("scan comments for task %s: %w", taskID, err)
 		}
 		commentList = append(commentList, comment)
 	}
 	if rowsErr := rows.Err(); rowsErr != nil {
-		return []domain.TaskComment{}, 0, fmt.Errorf("%w: %w", domain.ErrGetComments, rowsErr)
+		return []domain.TaskComment{}, 0, fmt.Errorf("iterate comments for task %s: %w", taskID, rowsErr)
 	}
 
 	var total int
 	err = r.db.QueryRow("SELECT COUNT(*) FROM task_comments WHERE task_id = $1", taskID).Scan(&total)
 	if err != nil {
-		return []domain.TaskComment{}, 0, fmt.Errorf("%w: %w", domain.ErrGetComments, err)
+		return []domain.TaskComment{}, 0, fmt.Errorf("count comments for task %s: %w", taskID, err)
 	}
 
 	return commentList, total, nil

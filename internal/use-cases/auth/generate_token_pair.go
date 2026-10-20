@@ -21,12 +21,12 @@ func (uc *authUseCases) generateTokenPair(userID uuid.UUID, userRole domain.Role
 	secret := []byte(uc.config.JWT.Secret)
 	accessToken, err := access.SignedString(secret)
 	if err != nil {
-		return domain.TokenPair{}, fmt.Errorf("failed to sign access token: %w", err)
+		return domain.TokenPair{}, fmt.Errorf("sign access token: %w", err)
 	}
 
 	refresh := make([]byte, 32)
 	if _, err = rand.Read(refresh); err != nil {
-		return domain.TokenPair{}, fmt.Errorf("failed to generate refresh token: %w", err)
+		return domain.TokenPair{}, fmt.Errorf("generate refresh token: %w", err)
 	}
 	refreshToken := base64.URLEncoding.EncodeToString(refresh)
 

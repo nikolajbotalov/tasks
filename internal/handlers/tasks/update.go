@@ -14,12 +14,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type UpdateTaskRequest struct {
-	AssigneeID  uuid.UUID `json:"assignee_id"`
-	Status      *string   `json:"status,omitempty"`
-	Priority    *string   `json:"priority,omitempty"`
-	Name        *string   `json:"name,omitempty" binding:"min=2,max=255"`
-	Description *string   `json:"description,omitempty" binding:"max=10000"`
+type updateTaskRequest struct {
+	AssigneeID  *uuid.UUID `json:"assignee_id"`
+	Status      *string    `json:"status" binding:"omitempty,oneof=to_do in_progress in_review done on_hold cancelled"`
+	Priority    *string    `json:"priority" binding:"omitempty,oneof=low middle high"`
+	Name        *string    `json:"name" binding:"omitempty,min=2,max=255"`
+	Description *string    `json:"description" binding:"omitempty,max=10000"`
 }
 
 func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
@@ -30,7 +30,7 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		var req UpdateTaskRequest
+		var req updateTaskRequest
 		if err = c.ShouldBindJSON(&req); err != nil {
 			validation.HandleBindError(c, err)
 			return

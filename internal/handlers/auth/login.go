@@ -12,9 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type loginUserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
 func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var loginRequest domain.LoginUserRequest
+		var loginRequest loginUserRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
 			validation.HandleBindError(c, err)
 			return

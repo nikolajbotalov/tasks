@@ -22,9 +22,9 @@ func (r *tasksRepository) GetTaskList(
 		  AND ($3 = '' OR status = $3) 
 		  AND ($4 = '' OR priority = $4) 
 		LIMIT $5 OFFSET $6`,
-		authorID.String(), assigneeID, status, priority, limit, (page-1)*limit)
+		authorID, assigneeID, status, priority, limit, (page-1)*limit)
 	if err != nil {
-		return []domain.Task{}, 0, fmt.Errorf("%w: %w", domain.ErrGetTasks, err)
+		return []domain.Task{}, 0, fmt.Errorf("query task list: %w", err)
 	}
 	defer rows.Close()
 
@@ -36,11 +36,10 @@ func (r *tasksRepository) GetTaskList(
 		if err != nil {
 			return []domain.Task{}, 0, fmt.Errorf("scan task %s: %w", t.ID, err)
 		}
-		t.Status = TaskStatusToLower(t.Status)
 		tasks = append(tasks, t)
 	}
 	if rowsErr := rows.Err(); rowsErr != nil {
-		return []domain.Task{}, 0, fmt.Errorf("%w: %w", domain.ErrGetTasks, rowsErr)
+		return []domain.Task{}, 0, fmt.Errorf("iterate task list: %w", rowsErr)
 	}
 
 	var totalCount int
@@ -54,7 +53,7 @@ func (r *tasksRepository) GetTaskList(
 		authorID, assigneeID, status, priority).
 		Scan(&totalCount)
 	if err != nil {
-		return []domain.Task{}, 0, fmt.Errorf("%w: %w", domain.ErrGetTasks, err)
+		return []domain.Task{}, 0, fmt.Errorf("count task: %w", err)
 	}
 
 	return tasks, totalCount, nil

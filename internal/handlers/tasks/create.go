@@ -13,9 +13,9 @@ import (
 )
 
 type createTaskRequest struct {
-	AssigneeID  uuid.UUID `json:"assignee_id,omitempty"`
-	Status      string    `json:"status,omitempty"`
-	Priority    string    `json:"priority,omitempty"`
+	AssigneeID  uuid.UUID `json:"assignee_id"`
+	Status      string    `json:"status" binding:"omitempty,oneof=to_do in_progress in_review done on_hold cancelled"`
+	Priority    string    `json:"priority" binding:"omitempty,oneof=low middle high"`
 	Name        string    `json:"name" binding:"required,min=2,max=255"`
 	Description string    `json:"description" binding:"max=10000"`
 }

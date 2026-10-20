@@ -3,12 +3,12 @@ package domain
 type TaskStatus string
 
 const (
-	ToDo       TaskStatus = "TO_DO"
-	InProgress TaskStatus = "IN_PROGRESS"
-	InReview   TaskStatus = "IN_REVIEW"
-	Done       TaskStatus = "DONE"
-	OnHold     TaskStatus = "ON_HOLD"
-	Cancelled  TaskStatus = "CANCELLED"
+	ToDo       TaskStatus = "to_do"
+	InProgress TaskStatus = "in_progress"
+	InReview   TaskStatus = "in_review"
+	Done       TaskStatus = "done"
+	OnHold     TaskStatus = "on_hold"
+	Cancelled  TaskStatus = "cancelled"
 )
 
 func (s TaskStatus) IsValid() bool {

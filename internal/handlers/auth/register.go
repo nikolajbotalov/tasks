@@ -13,9 +13,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type registerUserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Username string `json:"username" binding:"required,min=2,max=32"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
 func RegisterUser(uc auth.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var registerUser domain.RegisterUserRequest
+		var registerUser registerUserRequest
 		if err := c.ShouldBindJSON(&registerUser); err != nil {
 			validation.HandleBindError(c, err)
 			return

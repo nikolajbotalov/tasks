@@ -13,7 +13,8 @@
     - Разные права доступа к CRUD задачам (проверка прав через `role_permissions`)
 
 2. **CRUD задач**
-    - Заголовок, описание, приоритет (low/medium/high), статус (todo/in-progress/done)
+    - Заголовок, описание, приоритет (low/middle/high), статус
+      (`to_do`, `in_progress`, `in_review`, `done`, `on_hold`, `cancelled`)
     - Назначение на исполнителя (user_id)
     - Создатель задачи — автосоздание при создании
 
@@ -49,7 +50,7 @@
 ```
 POST   /api/auth/register
 POST   /api/auth/login
-GET    /api/tasks?page=1&limit=20&status=todo&priority=high&assignee_id=&search=
+GET    /api/tasks?page=1&limit=20&status=to_do&priority=high&assignee_id=&search=
 GET    /api/tasks/:id
 PUT    /api/tasks/:id
 DELETE /api/tasks/:id
@@ -152,12 +153,12 @@ GET    /api/tasks/:id/comments
 1. **Управление ролями** — назначение ролей пользователям через API не
    реализовано: при регистрации роль по умолчанию `user`; `admin` назначается
    вне API. Модель ролей и проверка прав уже реализованы.
-2. **Расширение модели задачи** — `priority`, `status`, `assignee_id`, теги.
-   Создатель уже реализован (`author_id`).
+2. **Расширение модели задачи** — `priority`, `status`, `assignee_id` и
+   `author_id` уже реализованы; остались теги.
 3. **Миграции БД** — `golang-migrate` не подключён, схема создана вручную.
 4. **Комментарии** — реализованы; осталось логирование изменений (audit).
-5. **Фильтрация и поиск** — параметры `status`, `priority`, `assignee_id`,
-   `search` пока не реализованы; пагинация уже исправлена.
+5. **Фильтрация и поиск** — параметры `status`, `priority`, `assignee_id`
+   реализованы; остался `search`.
 6. **Swagger / OpenAPI** — отсутствует (валидация через
    `go-playground/validator` уже используется).
 7. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
@@ -178,6 +179,12 @@ GET    /api/tasks/:id/comments
   `.env`; поэтому `JWT_SECRET` и `DB_PASSWORD` дополнительно проверяются явно
   после загрузки (`internal/config/config.go`).
 - `config` реализован как singleton (`sync.Once`) — осознанный выбор.
+- `config.LoadConfig` (`internal/config/config.go`): при отсутствии файла `.env`
+  чтение переменных окружения не выполняется — ветка
+  `errors.Is(err, os.ErrNotExist)` возвращает ошибку. Локально не проявляется
+  (`.env` есть), но в деплое только на переменных окружения сервис не стартует.
+  Поправить при подготовке Docker/compose: при `os.ErrNotExist` переходить к
+  `cleanenv.ReadEnv`, а не возвращать ошибку.
 - `EnsureSchema` (`internal/repository/postgres/schema.go`) нигде не вызывается —
   мёртвый код; схема создаётся вручную, `golang-migrate` не подключён.
 - `context.Context` не прокинут в use-case/repository.

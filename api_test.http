@@ -29,7 +29,7 @@ Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Get all tasks with "to_do" status
-GET http://localhost:8080/api/tasks?status=TO_DO HTTP/2
+GET http://localhost:8080/api/tasks?status=to_do HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
@@ -63,7 +63,7 @@ Authorization: Bearer {{access_token}}
 {
   "name": "task 5",
   "description": "description fifth task",
-  "status": "IN_PROGRESS"
+  "status": "in_progress"
 }
 
 ### Delete Task
