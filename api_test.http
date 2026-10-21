@@ -1,5 +1,5 @@
 ### Register User
-POST http://localhost:8080/api/auth/register HTTP/2
+POST http://localhost:8080/api/v1/auth/register HTTP/2
 Content-Type: application/json
 Accept: application/json
 
@@ -10,7 +10,7 @@ Accept: application/json
 }
 
 ### Login User
-POST http://localhost:8080/api/auth/login HTTP/2
+POST http://localhost:8080/api/v1/auth/login HTTP/2
 Content-Type: application/json
 Accept: application/json
 
@@ -24,27 +24,27 @@ Accept: application/json
 %}
 
 ### Get all tasks
-GET http://localhost:8080/api/tasks HTTP/2
+GET http://localhost:8080/api/v1/tasks HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Get all tasks with "to_do" status
-GET http://localhost:8080/api/tasks?status=to_do HTTP/2
+GET http://localhost:8080/api/v1/tasks?status=to_do HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Get all tasks with "low" priority
-GET http://localhost:8080/api/tasks?priority=low HTTP/2
+GET http://localhost:8080/api/v1/tasks?priority=low HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Get task by ID
-GET http://localhost:8080/api/tasks/2d43043c-a49e-407c-b955-0b82f76073a2
+GET http://localhost:8080/api/v1/tasks/2d43043c-a49e-407c-b955-0b82f76073a2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 ### Create task
-POST http://localhost:8080/api/tasks HTTP/2
+POST http://localhost:8080/api/v1/tasks HTTP/2
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{access_token}}
@@ -55,7 +55,7 @@ Authorization: Bearer {{access_token}}
 }
 
 ### Update task
-PUT http://localhost:8080/api/tasks/82af17ab-d4e7-4302-82e0-c07f2901f3ae
+PUT http://localhost:8080/api/v1/tasks/82af17ab-d4e7-4302-82e0-c07f2901f3ae
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{access_token}}
@@ -67,6 +67,6 @@ Authorization: Bearer {{access_token}}
 }
 
 ### Delete Task
-DELETE http://localhost:8080/api/tasks/93c76532-981d-4ba7-83c6-061554c5d679
+DELETE http://localhost:8080/api/v1/tasks/93c76532-981d-4ba7-83c6-061554c5d679
 Accept: application/json
 Authorization: Bearer {{access_token}}

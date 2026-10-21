@@ -48,17 +48,18 @@
 ### Структура API (примерные эндпоинты)
 
 ```
-POST   /api/auth/register
-POST   /api/auth/login
-GET    /api/tasks?page=1&limit=20&status=to_do&priority=high&assignee_id=&search=
-GET    /api/tasks/:id
-PUT    /api/tasks/:id
-DELETE /api/tasks/:id
-POST   /api/tasks/:id/comments
-GET    /api/tasks/:id/comments
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+GET    /api/v1/tasks?page=1&limit=20&status=to_do&priority=high&assignee_id=&search=
+GET    /api/v1/tasks/:id
+POST   /api/v1/tasks
+PUT    /api/v1/tasks/:id
+DELETE /api/v1/tasks/:id
+POST   /api/v1/tasks/:id/comments
+GET    /api/v1/tasks/:id/comments
 ```
 
-Все маршруты `/api/tasks…` требуют заголовок `Authorization: Bearer <token>` и
+Все маршруты `/api/v1/tasks…` требуют заголовок `Authorization: Bearer <token>` и
 соответствующее право (`task:*`/`comment:*`). Пагинация: `page ≥ 1`,
 `1 ≤ limit ≤ 100` (по умолчанию 10).
 
@@ -88,7 +89,6 @@ GET    /api/tasks/:id/comments
 | `PORT` | нет | `8080` | порт HTTP-сервера |
 | `JWT_SECRET` | да | — | ключ подписи JWT (HS256) |
 | `JWT_ACCESS_TTL` | нет | `24h` | время жизни access-токена |
-| `JWT_REFRESH_TTL` | нет | `168h` | время жизни refresh-токена |
 | `DB_HOST` | нет | `localhost` | хост PostgreSQL |
 | `DB_PORT` | нет | `5432` | порт PostgreSQL |
 | `DB_NAME` | нет | `taskflow` | имя БД |
@@ -127,14 +127,14 @@ GET    /api/tasks/:id/comments
 
 ### Реализовано
 
-1. **Аутентификация и роли** — `POST /api/auth/register`, `POST /api/auth/login`,
+1. **Аутентификация и роли** — `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
    JWT (HS256), хеширование паролей (bcrypt), middleware проверки токена.
    Роли `admin`/`user`/`viewer`; claim `role` в токене; проверка разрешений
    (`task:*`, `comment:*`) на маршрутах через `RequirePermission`.
 2. **CRUD задач** — создание, список, получение по id, частичное обновление,
    удаление. Слои `handler → use-case → repository → domain`. Есть создатель
    задачи (`author_id`).
-3. **Комментарии** — `POST/GET /api/tasks/:id/comments`. Слои
+3. **Комментарии** — `POST/GET /api/v1/tasks/:id/comments`. Слои
    `handler → use-case → repository → domain`.
 4. **Роли и права** — `domain.Role`/`domain.Permission`, таблицы `roles` и
    `role_permissions`, middleware `RequirePermission`.
@@ -147,6 +147,16 @@ GET    /api/tasks/:id/comments
 7. **Отказоустойчивость** — graceful shutdown по `SIGINT`/`SIGTERM`
    (`internal/app/server.go`); fail-fast при старте: загрузка конфига,
    подключение к БД, загрузка `role_permissions`.
+8. **CORS** — `gin-contrib/cors`; список origin'ов и методов приходит из конфига
+   (`CORS_ALLOWED_ORIGINS`, `CORS_ALLOWED_METHODS`), заголовок `Authorization`
+   разрешён в preflight, preflight не расходует лимит запросов.
+9. **Rate limiting** — token bucket (`golang.org/x/time/rate`) на IP: отдельный
+   строгий лимит на `/api/v1/auth/*` (0.1 rps, burst 5 — защита от перебора),
+   на остальных маршрутах — 10 rps (burst 20); ответ `429` с телом
+   `{"error": "rate limit exceeded"}`, неактивные записи чистятся по TTL.
+10. **Trusted proxies** — `SetTrustedProxies(nil)`: `ClientIP()` берётся из
+    соединения, а не из `X-Forwarded-For`, поэтому IP в логах и лимитере не
+    подделать. При появлении reverse-proxy понадобится список CIDR.
 
 ### Осталось (по MVP)
 
@@ -161,13 +171,13 @@ GET    /api/tasks/:id/comments
    `go-playground/validator` уже используется).
 6. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
    «Конфигурация приложения»), graceful shutdown и fail-fast на старте
-   реализованы (`internal/app/server.go`); осталось: CORS, Docker/compose,
+   реализованы (`internal/app/server.go`); осталось: Docker/compose,
    тесты, вынос настройки пула соединений в
    `internal/repository/postgres/connect.go`.
-7. **Rate limiting / `429 Too Many Requests`** — ограничение частоты запросов
-   (в первую очередь на `/api/auth/login` — защита от перебора), ответ `429`
-   с заголовком `Retry-After` и единым телом `{"error": "…"}`; клиент при
-   `429` делает повтор с backoff, ориентируясь на `Retry-After`.
+7. **Rate limiting / `429 Too Many Requests`** — базовое ограничение частоты
+   реализовано (`internal/handlers/middleware/rate_limiter.go`); осталось:
+   заголовок `Retry-After` и общий лимит поверх маршрутов (сейчас лимитер
+   навешен на каждый маршрут отдельно).
 
 ---
 
