@@ -3,6 +3,7 @@ package comments
 import (
 	"TaskFlow/internal/config"
 	"TaskFlow/internal/domain"
+	"TaskFlow/internal/handlers"
 	"TaskFlow/internal/handlers/middleware"
 	commentsUC "TaskFlow/internal/use-cases/comment"
 	"log/slog"
@@ -17,17 +18,12 @@ func SetupRoutes(
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
-	const (
-		limit = 10
-		burst = 20
-	)
-
 	commentRoutes := r.Group("/api/v1/tasks")
 	commentRoutes.Use(middleware.JWTAuthMiddleware(cfg))
 	{
-		commentRoutes.GET("/:id/comments", middleware.RateLimiter(limit, burst),
+		commentRoutes.GET("/:id/comments", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionCommentRead), GetAllTaskComments(uc, logger))
-		commentRoutes.POST("/:id/comments", middleware.RateLimiter(limit, burst),
+		commentRoutes.POST("/:id/comments", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionCommentCreate), CreateTaskComment(uc, logger))
 	}
 }

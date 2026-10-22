@@ -9,6 +9,7 @@ const (
 	PermissionTaskDelete    Permission = "task:delete"
 	PermissionCommentRead   Permission = "comment:read"
 	PermissionCommentCreate Permission = "comment:create"
+	PermissionUserUpdate    Permission = "user:update"
 )
 
 type RolePermissions map[Role]map[Permission]struct{}

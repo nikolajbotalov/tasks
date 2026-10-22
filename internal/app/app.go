@@ -5,9 +5,11 @@ import (
 	authRepo "TaskFlow/internal/repository/auth"
 	commentsRepo "TaskFlow/internal/repository/comment"
 	permissionsRepo "TaskFlow/internal/repository/permissions"
+	rolesRepo "TaskFlow/internal/repository/roles"
 	tasksRepo "TaskFlow/internal/repository/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
 	commentsUC "TaskFlow/internal/use-cases/comment"
+	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"database/sql"
 	"fmt"
@@ -55,6 +57,8 @@ func NewApp() (*App, error) {
 	tasksUseCases := tasksUC.NewTasksUseCases(taskRepository)
 	commentsRepository := commentsRepo.NewCommentRepository(db)
 	commentsUseCases := commentsUC.NewCommentUseCases(commentsRepository)
+	rolesRepository := rolesRepo.NewRolesRepository(db)
+	rolesUseCases := rolesUC.NewRolesUseCases(rolesRepository)
 
 	permissionsRepository := permissionsRepo.NewPermissionsRepository(db)
 	rolePermissions, err := permissionsRepository.GetAll()
@@ -63,7 +67,7 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	server := NewServer(logger, cfg, authUseCases, tasksUseCases, commentsUseCases, rolePermissions)
+	server := NewServer(logger, cfg, authUseCases, tasksUseCases, commentsUseCases, rolePermissions, rolesUseCases)
 
 	return &App{
 		Logger: logger,
