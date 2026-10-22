@@ -5,9 +5,11 @@ import (
 	"TaskFlow/internal/handlers/auth"
 	"TaskFlow/internal/handlers/comments"
 	"TaskFlow/internal/handlers/middleware"
+	"TaskFlow/internal/handlers/roles"
 	"TaskFlow/internal/handlers/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
 	commentsUC "TaskFlow/internal/use-cases/comment"
+	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"context"
 	"errors"
@@ -35,6 +37,7 @@ func NewServer(
 	tasksUc tasksUC.UseCases,
 	commentsUC commentsUC.UseCases,
 	checker middleware.PermissionChecker,
+	rolesUc rolesUC.UseCases,
 ) *Server {
 	router := gin.New()
 
@@ -55,6 +58,7 @@ func NewServer(
 	auth.SetupRoutes(router, authUc, logger)
 	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)
 	comments.SetupRoutes(router, cfg, commentsUC, checker, logger)
+	roles.SetupRoutes(router, cfg, rolesUc, checker, logger)
 
 	appAddr := net.JoinHostPort(cfg.Listen.BindIP, cfg.Listen.Port)
 

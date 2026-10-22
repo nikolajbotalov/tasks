@@ -16,4 +16,5 @@ var (
 	ErrInvalidAssigneeParam = errors.New("invalid task assignee id param or type")
 	ErrInvalidStatusParam   = errors.New("invalid task status param or type")
 	ErrInvalidPriorityParam = errors.New("invalid task priority param or type")
+	ErrGetUserID            = errors.New("no user id or incorrect format")
 )

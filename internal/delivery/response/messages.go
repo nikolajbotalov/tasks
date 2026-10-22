@@ -22,4 +22,8 @@ const (
 	InvalidTokenClaims         = "invalid token claims"
 	InvalidTokenRole           = "invalid token role"
 	RateLimitExceeded          = "rate limit exceeded"
+	IncorrectUserID            = "no user id or incorrect format"
+	UnknownRole                = "unknown role"
+	UserNotFound               = "user not found"
+	RoleUpdated                = "role was updated"
 )
