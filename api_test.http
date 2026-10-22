@@ -71,6 +71,11 @@ DELETE http://localhost:8080/api/v1/tasks/93c76532-981d-4ba7-83c6-061554c5d679
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
+### Get all user roles
+GET http://localhost:8080/api/v1/users/roles
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
 ### Update user role
 PUT http://localhost:8080/api/v1/users/bba92bc0-faa6-470a-828b-26c30f44d449/roles
 Content-Type: application/json
@@ -78,5 +83,5 @@ Accept: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "role": "user"
+  "role": "viewer"
 }
