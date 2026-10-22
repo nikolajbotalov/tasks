@@ -22,6 +22,8 @@ func SetupRoutes(
 	usersProtected := r.Group("/api/v1/users")
 	usersProtected.Use(middleware.JWTAuthMiddleware(cfg))
 	{
+		usersProtected.GET("/roles", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
+			middleware.RequirePermission(checker, domain.PermissionUserRead), GetAllUsersRoles(uc, logger))
 		usersProtected.PUT("/:id/roles", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionUserUpdate), UpdateUserRole(uc, logger))
 	}

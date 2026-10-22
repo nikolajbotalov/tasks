@@ -7,10 +7,12 @@ import (
 )
 
 type roleRepository interface {
+	GetAllUsersRoles() ([]domain.Role, error)
 	UpdateUserRole(userID uuid.UUID, role domain.Role) error
 }
 
 type UseCases interface {
+	GetAllUsersRoles() (domain.GetUserRolesResponse, error)
 	UpdateUserRole(userID uuid.UUID, role string) error
 }
 

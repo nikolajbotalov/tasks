@@ -9,6 +9,7 @@ const (
 	PermissionTaskDelete    Permission = "task:delete"
 	PermissionCommentRead   Permission = "comment:read"
 	PermissionCommentCreate Permission = "comment:create"
+	PermissionUserRead      Permission = "user:read"
 	PermissionUserUpdate    Permission = "user:update"
 )
 

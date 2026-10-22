@@ -11,3 +11,7 @@ const (
 func (r Role) IsValid() bool {
 	return r == RoleViewer || r == RoleUser || r == RoleAdmin
 }
+
+type GetUserRolesResponse struct {
+	Roles []Role `json:"roles"`
+}
