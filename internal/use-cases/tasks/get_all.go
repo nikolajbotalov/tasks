@@ -12,9 +12,10 @@ func (uc *tasksUseCases) GetAllTasks(
 	assigneeID *uuid.UUID,
 	status domain.TaskStatus,
 	priority domain.TaskPriority,
+	search string,
 	page, limit int,
 ) (domain.GetAllTasksResponse, error) {
-	userTasks, total, err := uc.repo.GetTaskList(authorID, assigneeID, status, priority, page, limit)
+	userTasks, total, err := uc.repo.GetTaskList(authorID, assigneeID, status, priority, search, page, limit)
 	if err != nil {
 		return domain.GetAllTasksResponse{}, fmt.Errorf("get task list: %w", err)
 	}
