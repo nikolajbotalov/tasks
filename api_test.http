@@ -38,6 +38,11 @@ GET http://localhost:8080/api/v1/tasks?priority=low HTTP/2
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
+### Get all tasks with search param
+GET http://localhost:8080/api/v1/tasks?search=first
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
 ### Get task by ID
 GET http://localhost:8080/api/v1/tasks/2d43043c-a49e-407c-b955-0b82f76073a2
 Accept: application/json

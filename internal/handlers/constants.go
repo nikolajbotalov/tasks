@@ -6,3 +6,5 @@ const (
 	ProtectedRateLimit   = 10
 	ProtectedRateBurst   = 20
 )
+
+const MaxSearchLength = 100

@@ -16,6 +16,7 @@ const (
 	InvalidTaskAssigneeIDParam = "invalid assignee param"
 	InvalidTaskStatusParam     = "invalid task status param"
 	InvalidTaskPriorityParam   = "invalid task priority param"
+	SearchQueryIsTooLong       = "search query is too long"
 	InvalidRequestBody         = "invalid request body"
 	AuthorizationHeaderMissing = "authorization header missing"
 	InvalidToken               = "invalid token"

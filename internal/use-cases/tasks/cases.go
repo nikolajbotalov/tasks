@@ -12,6 +12,7 @@ type Repository interface {
 		assigneeID *uuid.UUID,
 		status domain.TaskStatus,
 		priority domain.TaskPriority,
+		search string,
 		page, limit int,
 	) ([]domain.Task, int, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
@@ -26,6 +27,7 @@ type UseCases interface {
 		assigneeID *uuid.UUID,
 		status domain.TaskStatus,
 		priority domain.TaskPriority,
+		search string,
 		page, limit int,
 	) (domain.GetAllTasksResponse, error)
 	GetTaskByID(id uuid.UUID) (domain.Task, error)
