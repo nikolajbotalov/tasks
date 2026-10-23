@@ -5,12 +5,15 @@ import (
 	authRepo "TaskFlow/internal/repository/auth"
 	commentsRepo "TaskFlow/internal/repository/comment"
 	permissionsRepo "TaskFlow/internal/repository/permissions"
+	"TaskFlow/internal/repository/postgres"
 	rolesRepo "TaskFlow/internal/repository/roles"
 	tasksRepo "TaskFlow/internal/repository/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
 	commentsUC "TaskFlow/internal/use-cases/comment"
 	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
+	"TaskFlow/migrations"
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -48,6 +51,11 @@ func NewApp() (*App, error) {
 	err = db.Ping()
 	if err != nil {
 		logger.Error("ping db", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	if err = postgres.RunMigrations(context.Background(), db, migrations.FS); err != nil {
+		logger.Error("migrate db", slog.String("error", err.Error()))
 		return nil, err
 	}
 
