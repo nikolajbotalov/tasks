@@ -4,16 +4,14 @@ import (
 	"TaskFlow/internal/domain"
 	"errors"
 	"fmt"
-	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (uc *authUseCases) LoginUser(email, password string) (domain.TokenPair, error) {
-	trimEmail := strings.TrimSpace(email)
-	lowerEmail := strings.ToLower(trimEmail)
+	normalizedEmail := domain.NormalizeEmail(email)
 
-	user, err := uc.repo.FindUserByEmail(lowerEmail)
+	user, err := uc.repo.FindUserByEmail(normalizedEmail)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return domain.TokenPair{}, domain.ErrInvalidCredentials

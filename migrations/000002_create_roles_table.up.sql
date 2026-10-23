@@ -1,0 +1,4 @@
+CREATE TABLE roles
+(
+    name TEXT PRIMARY KEY
+);
