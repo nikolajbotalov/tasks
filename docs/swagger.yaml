@@ -27,6 +27,15 @@ definitions:
     - password
     - username
     type: object
+  comments.createCommentRequest:
+    properties:
+      text:
+        maxLength: 10000
+        minLength: 2
+        type: string
+    required:
+    - text
+    type: object
   domain.GetAllTasksResponse:
     properties:
       limit:
@@ -558,6 +567,58 @@ paths:
       security:
       - BearerAuth: []
       summary: Get task comments
+      tags:
+      - Comments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: comment request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/comments.createCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.TaskComment'
+        "400":
+          description: invalid task id or request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create comment for task
       tags:
       - Comments
 securityDefinitions:
