@@ -62,11 +62,28 @@ definitions:
       total:
         type: integer
     type: object
+  domain.GetUserRolesResponse:
+    properties:
+      roles:
+        items:
+          $ref: '#/definitions/domain.Role'
+        type: array
+    type: object
   domain.RegisterResponse:
     properties:
       id:
         type: string
     type: object
+  domain.Role:
+    enum:
+    - viewer
+    - user
+    - admin
+    type: string
+    x-enum-varnames:
+    - RoleViewer
+    - RoleUser
+    - RoleAdmin
   domain.Task:
     properties:
       assignee_id:
@@ -621,6 +638,36 @@ paths:
       summary: Create comment for task
       tags:
       - Comments
+  /users/roles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetUserRolesResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: permission denied
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get roles list
+      tags:
+      - Roles
 securityDefinitions:
   BearerAuth:
     in: header

@@ -661,6 +661,54 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/roles": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "Get roles list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.GetUserRolesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "permission denied",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "rate limit exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -755,6 +803,17 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.GetUserRolesResponse": {
+            "type": "object",
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Role"
+                    }
+                }
+            }
+        },
         "domain.RegisterResponse": {
             "type": "object",
             "properties": {
@@ -762,6 +821,19 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "domain.Role": {
+            "type": "string",
+            "enum": [
+                "viewer",
+                "user",
+                "admin"
+            ],
+            "x-enum-varnames": [
+                "RoleViewer",
+                "RoleUser",
+                "RoleAdmin"
+            ]
         },
         "domain.Task": {
             "type": "object",
