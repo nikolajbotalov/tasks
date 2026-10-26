@@ -46,7 +46,7 @@
 
 ---
 
-### Структура API (примерные эндпоинты)
+### Структура API (эндпоинты)
 
 ```
 POST   /api/v1/auth/register
@@ -60,7 +60,13 @@ POST   /api/v1/tasks/:id/comments
 GET    /api/v1/tasks/:id/comments
 GET    /api/v1/users/roles
 PUT    /api/v1/users/:id/roles
+
+GET    /swagger/index.html
+GET    /swagger/doc.json
 ```
+
+Swagger UI — `/swagger/index.html`, спецификация — `/swagger/doc.json`; оба
+маршрута находятся вне `/api/v1` и не требуют токена (см. «Swagger / OpenAPI»).
 
 Все маршруты `/api/v1/tasks…` требуют заголовок `Authorization: Bearer <token>` и
 соответствующее право (`task:*`/`comment:*`). Пагинация: `page ≥ 1`,
@@ -191,6 +197,37 @@ PUT    /api/v1/users/:id/roles
 - Каталог `migrations/` остаётся на диске, поэтому для ручных операций применим и
   CLI: `migrate -path migrations -database "postgres://…" up|down`.
 
+### Swagger / OpenAPI
+
+Спецификация генерируется `swag` из godoc-аннотаций на хендлерах и отдаётся
+`gin-swagger`:
+
+- UI — `http://<BIND_IP>:<PORT>/swagger/index.html`;
+- спецификация (Swagger 2.0) — `/swagger/doc.json`;
+- сгенерированные файлы лежат в `docs/` (`docs.go`, `swagger.json`,
+  `swagger.yaml`) и коммитятся в репозиторий; каталог рядом с бинарником не нужен,
+  `docs.go` импортируется в `main.go` и регистрирует спеку при старте.
+
+Генерация после изменения аннотаций:
+
+```
+swag init
+go build ./...
+```
+
+Зависимости (`swaggo/swag`, `swaggo/gin-swagger`, `swaggo/files`) уже в `go.mod`;
+CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/swag@latest`.
+Версию CLI стоит держать близкой к модулю `swaggo/swag`, иначе шаблоны
+сгенерированных файлов могут отличаться.
+
+Аннотации: `@BasePath /api/v1` и `@securityDefinitions.apikey BearerAuth` — в
+`main.go`, операции описываются над хендлерами (`@Summary`, `@Param`, `@Success`,
+`@Failure`, `@Router`). Для защищённых операций — `@Security BearerAuth`; в UI
+токен вводится через **Authorize** в виде `Bearer <access_token>`.
+
+Маршруты `/swagger/*` публичны: они не проходят JWT-middleware и rate limiter.
+Для продакшена их нужно закрыть или отключить.
+
 ---
 
 ## Текущее состояние
@@ -239,6 +276,11 @@ PUT    /api/v1/users/:id/roles
     (`//go:embed`, `migrations/embed.go`) и применяется при старте
     (`internal/repository/postgres/migrate.go`); история — в `schema_migrations`;
     DDL всех таблиц и сид ролей/прав — `000001…000006` (см. «Миграции БД»).
+13. **Swagger/OpenAPI** — `swag` + `gin-swagger`: аннотации на хендлерах,
+    сгенерированные `docs/` (`docs.go`, `swagger.json`, `swagger.yaml`)
+    вкоммичены; UI — `/swagger/index.html`, спека — `/swagger/doc.json` (вне
+    `/api/v1`, без авторизации); описаны все текущие операции, для защищённых —
+    `BearerAuth` (см. «Swagger / OpenAPI»).
 
 ### Осталось (по MVP)
 
@@ -258,14 +300,12 @@ PUT    /api/v1/users/:id/roles
      хардкод `domain.Role.IsValid()` — расхождение описано в «Известных слабых
      местах».
 2. **Комментарии** — реализованы; осталось логирование изменений (audit).
-3. **Swagger / OpenAPI** — отсутствует (валидация через
-   `go-playground/validator` уже используется).
-4. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
+3. **Инфраструктура** — секреты и параметры БД вынесены в конфиг (см. раздел
    «Конфигурация приложения»), graceful shutdown и fail-fast на старте
    реализованы (`internal/app/server.go`); осталось: Docker/compose,
    тесты, вынос настройки пула соединений в
    `internal/repository/postgres/connect.go`.
-5. **Rate limiting / `429 Too Many Requests`** — базовое ограничение частоты
+4. **Rate limiting / `429 Too Many Requests`** — базовое ограничение частоты
    реализовано (`internal/handlers/middleware/rate_limiter.go`); осталось:
    заголовок `Retry-After` и общий лимит поверх маршрутов (сейчас лимитер
    навешен на каждый маршрут отдельно).
@@ -320,4 +360,10 @@ PUT    /api/v1/users/:id/roles
   логируется без фильтрации.
 - Настройка пула соединений находится в `internal/app/app.go`, а не в
   `internal/repository/postgres/connect.go` (см. раздел «Подключение к БД»).
+- Swagger UI (`/swagger/index.html`) и спецификация (`/swagger/doc.json`)
+  публичны: маршрут не проходит JWT-middleware и rate limiter; в проде его нужно
+  закрыть или отключить.
+- `docs/` генерируются вручную (`swag init`), проверки актуальности в CI нет:
+  после правки аннотаций легко забыть перегенерировать файлы. Версия CLI `swag`
+  может расходиться с модулем `swaggo/swag` — фиксировать при обновлении.
 - Нет тестов; Docker/compose не подключены.

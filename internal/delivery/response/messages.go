@@ -5,7 +5,6 @@ const (
 	Internal                   = "internal server error"
 	EmailExists                = "email already exists"
 	IncorrectAuthorID          = "no author id or incorrect format"
-	CreateTask                 = "failed to create task"
 	InvalidPageParam           = "invalid page param"
 	InvalidLimitParam          = "invalid limit param"
 	IncorrectTaskID            = "no task id or incorrect format"
@@ -28,3 +27,7 @@ const (
 	UserNotFound               = "user not found"
 	RoleUpdated                = "role was updated"
 )
+
+type MessageResponse struct {
+	Message string `json:"message"`
+}

@@ -22,11 +22,27 @@ type updateTaskRequest struct {
 	Description *string    `json:"description" binding:"omitempty,max=10000"`
 }
 
+// UpdateTask godoc
+// @Summary Update a task
+// @Tags Tasks
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "task id" Format(uuid)
+// @Param request body updateTaskRequest true "task request body"
+// @Success 200 {object} response.MessageResponse "task was updated"
+// @Failure 400 {object} response.ErrorResponse "invalid task id or request body"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 404 {object} response.ErrorResponse "task not found"
+// @Failure 422 {object} response.ValidationErrorResponse "validation error"
+// @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /tasks/{id} [put]
 func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.IncorrectTaskID})
 			return
 		}
 
@@ -39,15 +55,19 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 		err = uc.UpdateTask(id, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
-				c.JSON(http.StatusNotFound, gin.H{"error": response.TaskNotFound})
+				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})
 				return
 			}
 
 			logger.Error("update task", slog.String("error", err.Error()))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+				Error: response.Internal,
+			})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": response.TaskUpdated})
+		c.JSON(http.StatusOK, response.MessageResponse{
+			Message: response.TaskUpdated,
+		})
 	}
 }

@@ -1,0 +1,740 @@
+basePath: /api/v1
+definitions:
+  auth.loginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.registerUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 32
+        minLength: 2
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  comments.createCommentRequest:
+    properties:
+      text:
+        maxLength: 10000
+        minLength: 2
+        type: string
+    required:
+    - text
+    type: object
+  domain.GetAllTasksResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      tasks:
+        items:
+          $ref: '#/definitions/domain.Task'
+        type: array
+      total:
+        type: integer
+    type: object
+  domain.GetTaskCommentsResponse:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/domain.TaskComment'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  domain.GetUserRolesResponse:
+    properties:
+      roles:
+        items:
+          $ref: '#/definitions/domain.Role'
+        type: array
+    type: object
+  domain.RegisterResponse:
+    properties:
+      id:
+        type: string
+    type: object
+  domain.Role:
+    enum:
+    - viewer
+    - user
+    - admin
+    type: string
+    x-enum-varnames:
+    - RoleViewer
+    - RoleUser
+    - RoleAdmin
+  domain.Task:
+    properties:
+      assignee_id:
+        type: string
+      author_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      priority:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.TaskComment:
+    properties:
+      author_id:
+        type: string
+      author_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      task_id:
+        type: string
+      text:
+        type: string
+    type: object
+  domain.TokenPair:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  response.FieldError:
+    properties:
+      field:
+        example: email
+        type: string
+      message:
+        example: must be a valid email
+        type: string
+    type: object
+  response.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  response.ValidationErrorResponse:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/response.FieldError'
+        type: array
+      error:
+        example: validation failed
+        type: string
+    type: object
+  roles.updateUserRoleRequest:
+    properties:
+      role:
+        type: string
+    required:
+    - role
+    type: object
+  tasks.createTaskRequest:
+    properties:
+      assignee_id:
+        type: string
+      description:
+        maxLength: 10000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        enum:
+        - low
+        - middle
+        - high
+        type: string
+      status:
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        type: string
+    required:
+    - name
+    type: object
+  tasks.updateTaskRequest:
+    properties:
+      assignee_id:
+        type: string
+      description:
+        maxLength: 10000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        enum:
+        - low
+        - middle
+        - high
+        type: string
+      status:
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a simple task flow server
+  title: Swagger TaskFlow API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.loginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.TokenPair'
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: invalid login or password
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Login existing user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: create new user request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.registerUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.RegisterResponse'
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: email already exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Create new user
+      tags:
+      - Auth
+  /tasks:
+    get:
+      parameters:
+      - description: filter by assignee id
+        in: query
+        name: assignee_id
+        type: string
+      - description: task status
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        in: query
+        name: status
+        type: string
+      - description: task priority
+        enum:
+        - low
+        - middle
+        - high
+        in: query
+        name: priority
+        type: string
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: page pagination param
+        in: query
+        name: page
+        type: integer
+      - description: limit pagination param
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetAllTasksResponse'
+        "400":
+          description: invalid query parameter
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all user tasks
+      tags:
+      - Tasks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: task request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.createTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Task'
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a task
+      tags:
+      - Tasks
+  /tasks/{id}:
+    delete:
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: task was deleted
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid task id
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a task
+      tags:
+      - Tasks
+    get:
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Task'
+        "400":
+          description: invalid task id
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get task details
+      tags:
+      - Tasks
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: task request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.updateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: task was updated
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid task id or request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a task
+      tags:
+      - Tasks
+  /tasks/{id}/comments:
+    get:
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: page pagination param
+        in: query
+        name: page
+        type: integer
+      - description: limit pagination param
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetTaskCommentsResponse'
+        "400":
+          description: invalid task id, page or limit
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get task comments
+      tags:
+      - Comments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: comment request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/comments.createCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.TaskComment'
+        "400":
+          description: invalid task id or request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create comment for task
+      tags:
+      - Comments
+  /users/{id}/roles:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/roles.updateUserRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: role was updated
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid user id or request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: permission denied
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error or unknown role
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user role
+      tags:
+      - Roles
+  /users/roles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetUserRolesResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: permission denied
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get roles list
+      tags:
+      - Roles
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

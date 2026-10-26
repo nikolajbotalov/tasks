@@ -23,6 +23,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
@@ -59,6 +61,8 @@ func NewServer(
 	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)
 	comments.SetupRoutes(router, cfg, commentsUC, checker, logger)
 	roles.SetupRoutes(router, cfg, rolesUc, checker, logger)
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	appAddr := net.JoinHostPort(cfg.Listen.BindIP, cfg.Listen.Port)
 
