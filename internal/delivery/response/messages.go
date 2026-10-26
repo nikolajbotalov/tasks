@@ -28,3 +28,7 @@ const (
 	UserNotFound               = "user not found"
 	RoleUpdated                = "role was updated"
 )
+
+type MessageResponse struct {
+	Message string `json:"message"`
+}

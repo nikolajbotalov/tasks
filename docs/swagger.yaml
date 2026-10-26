@@ -48,6 +48,11 @@ definitions:
         example: must be a valid email
         type: string
     type: object
+  response.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
   response.ValidationErrorResponse:
     properties:
       details:
@@ -86,6 +91,33 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  tasks.updateTaskRequest:
+    properties:
+      assignee_id:
+        type: string
+      description:
+        maxLength: 10000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        enum:
+        - low
+        - middle
+        - high
+        type: string
+      status:
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        type: string
     type: object
 info:
   contact: {}
@@ -228,6 +260,54 @@ paths:
       security:
       - BearerAuth: []
       summary: Get task details
+      tags:
+      - Tasks
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: task request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.updateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: task was updated
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid task id or request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a task
       tags:
       - Tasks
 securityDefinitions:

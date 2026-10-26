@@ -22,6 +22,21 @@ type updateTaskRequest struct {
 	Description *string    `json:"description" binding:"omitempty,max=10000"`
 }
 
+// UpdateTask godoc
+// @Summary Update a task
+// @Tags Tasks
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "task id" Format(uuid)
+// @Param request body updateTaskRequest true "task request body"
+// @Success 200 {object} response.MessageResponse "task was updated"
+// @Failure 400 {object} response.ErrorResponse "invalid task id or request body"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 404 {object} response.ErrorResponse "task not found"
+// @Failure 422 {object} response.ValidationErrorResponse "validation error"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /tasks/{id} [put]
 func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
