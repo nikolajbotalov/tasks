@@ -16,9 +16,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetAll GetAllTask godoc
+// GetAll godoc
 // @Summary Get all user tasks
-// @Description Get all user tasks
 // @Tags Tasks
 // @Produce json
 // @Security BearerAuth

@@ -12,6 +12,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetByID godoc
+// @Summary Get task details
+// @Tags Tasks
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "task id" Format(uuid)
+// @Success 200 {object} domain.Task
+// @Failure 400 {object} response.ErrorResponse "invalid task id"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 404 {object} response.ErrorResponse "task not found"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /tasks/{id} [get]
 func GetByID(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
