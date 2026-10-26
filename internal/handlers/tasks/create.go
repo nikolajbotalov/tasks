@@ -20,6 +20,19 @@ type createTaskRequest struct {
 	Description string    `json:"description" binding:"max=10000"`
 }
 
+// CreateTask godoc
+// @Summary Create a task
+// @Tags Tasks
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body createTaskRequest true "task request body"
+// @Success 201 {object} domain.Task
+// @Failure 400 {object} response.ErrorResponse "invalid request body"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 422 {object} response.ValidationErrorResponse "validation error"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /tasks [post]
 func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)

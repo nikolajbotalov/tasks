@@ -39,6 +39,54 @@ definitions:
       error:
         type: string
     type: object
+  response.FieldError:
+    properties:
+      field:
+        example: email
+        type: string
+      message:
+        example: must be a valid email
+        type: string
+    type: object
+  response.ValidationErrorResponse:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/response.FieldError'
+        type: array
+      error:
+        example: validation failed
+        type: string
+    type: object
+  tasks.createTaskRequest:
+    properties:
+      assignee_id:
+        type: string
+      description:
+        maxLength: 10000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 2
+        type: string
+      priority:
+        enum:
+        - low
+        - middle
+        - high
+        type: string
+      status:
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        type: string
+    required:
+    - name
+    type: object
 info:
   contact: {}
   description: This is a simple task flow server
@@ -105,6 +153,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Get all user tasks
+      tags:
+      - Tasks
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: task request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.createTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Task'
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a task
       tags:
       - Tasks
   /tasks/{id}:
