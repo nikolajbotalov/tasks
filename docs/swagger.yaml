@@ -1,5 +1,21 @@
 basePath: /api/v1
 definitions:
+  auth.registerUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      username:
+        maxLength: 32
+        minLength: 2
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
   domain.GetAllTasksResponse:
     properties:
       limit:
@@ -12,6 +28,11 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  domain.RegisterResponse:
+    properties:
+      id:
+        type: string
     type: object
   domain.Task:
     properties:
@@ -125,6 +146,47 @@ info:
   title: Swagger TaskFlow API
   version: "1.0"
 paths:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: create new user request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.registerUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.RegisterResponse'
+        "400":
+          description: invalid request body
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: email already exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation error
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Create new user
+      tags:
+      - Auth
   /tasks:
     get:
       parameters:
@@ -178,6 +240,10 @@ paths:
           description: unauthorized
           schema:
             $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: internal server error
           schema:
@@ -216,6 +282,10 @@ paths:
           description: validation error
           schema:
             $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: internal server error
           schema:
@@ -253,6 +323,10 @@ paths:
           description: task not found
           schema:
             $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: internal server error
           schema:
@@ -287,6 +361,10 @@ paths:
             $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "500":
@@ -337,6 +415,10 @@ paths:
           description: validation error
           schema:
             $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: internal server error
           schema:

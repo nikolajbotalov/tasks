@@ -30,56 +30,59 @@ import (
 // @Success 200 {object} domain.GetAllTasksResponse
 // @Failure 400 {object} response.ErrorResponse "invalid query parameter"
 // @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
 // @Failure 500 {object} response.ErrorResponse "internal server error"
 // @Router /tasks [get]
 func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": response.IncorrectAuthorID})
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.IncorrectAuthorID})
 			return
 		}
 
 		assigneeID, err := helpers.GetTaskAssigneeID(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskAssigneeIDParam})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.InvalidTaskAssigneeIDParam})
 			return
 		}
 
 		taskStatus, err := helpers.GetTaskStatus(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskStatusParam})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.InvalidTaskStatusParam})
 			return
 		}
 
 		taskPriority, err := helpers.GetTaskPriority(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidTaskPriorityParam})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.InvalidTaskPriorityParam})
 			return
 		}
 
 		search := c.Query("search")
 		trimmedSearch := strings.TrimSpace(search)
 		if utf8.RuneCountInString(trimmedSearch) > handlers.MaxSearchLength {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.SearchQueryIsTooLong})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.SearchQueryIsTooLong})
 			return
 		}
 
 		page, limit, err := pagination.GetPaginationParams(c)
 		if err != nil {
 			if errors.Is(err, domain.ErrInvalidPageParam) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidPageParam})
+				c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.InvalidPageParam})
 				return
 			}
 
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.InvalidLimitParam})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.InvalidLimitParam})
 			return
 		}
 
 		tasks, err := uc.GetAllTasks(authorID, assigneeID, taskStatus, taskPriority, trimmedSearch, page, limit)
 		if err != nil {
 			logger.Error("get task list", slog.String("error", err.Error()))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+				Error: response.Internal,
+			})
 			return
 		}
 

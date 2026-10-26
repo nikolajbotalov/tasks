@@ -31,18 +31,19 @@ type createTaskRequest struct {
 // @Failure 400 {object} response.ErrorResponse "invalid request body"
 // @Failure 401 {object} response.ErrorResponse "unauthorized"
 // @Failure 422 {object} response.ValidationErrorResponse "validation error"
+// @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
 // @Failure 500 {object} response.ErrorResponse "internal server error"
 // @Router /tasks [post]
 func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": response.IncorrectAuthorID})
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.IncorrectAuthorID})
 			return
 		}
 
 		var req createTaskRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
+		if err = c.ShouldBindJSON(&req); err != nil {
 			validation.HandleBindError(c, err)
 			return
 		}
@@ -50,7 +51,9 @@ func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 		task, err := uc.CreateTask(authorID, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			logger.Error("create task", slog.String("error", err.Error()))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": response.CreateTask})
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+				Error: response.Internal,
+			})
 			return
 		}
 

@@ -35,13 +35,14 @@ type updateTaskRequest struct {
 // @Failure 401 {object} response.ErrorResponse "unauthorized"
 // @Failure 404 {object} response.ErrorResponse "task not found"
 // @Failure 422 {object} response.ValidationErrorResponse "validation error"
+// @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
 // @Failure 500 {object} response.ErrorResponse "internal server error"
 // @Router /tasks/{id} [put]
 func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := helpers.GetTaskID(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": response.IncorrectTaskID})
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.IncorrectTaskID})
 			return
 		}
 
@@ -54,12 +55,14 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 		err = uc.UpdateTask(id, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
-				c.JSON(http.StatusNotFound, gin.H{"error": response.TaskNotFound})
+				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})
 				return
 			}
 
 			logger.Error("update task", slog.String("error", err.Error()))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
+				Error: response.Internal,
+			})
 			return
 		}
 
