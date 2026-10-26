@@ -16,6 +16,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetAll GetAllTask godoc
+// @Summary Get all user tasks
+// @Description Get all user tasks
+// @Tags Tasks
+// @Produce json
+// @Security BearerAuth
+// @Param assignee_id query string false "filter by assignee id"
+// @Param status query string false "task status" Enums(to_do, in_progress, in_review, done, on_hold, cancelled)
+// @Param priority query string false "task priority" Enums(low, middle, high)
+// @Param search query string false "search"
+// @Param page query int false "page pagination param"
+// @Param limit query int false "limit pagination param"
+// @Success 200 {object} domain.GetAllTasksResponse
+// @Failure 400 {object} response.ErrorResponse "invalid query parameter"
+// @Failure 401 {object} response.ErrorResponse "unauthorized"
+// @Failure 500 {object} response.ErrorResponse "internal server error"
+// @Router /tasks [get]
 func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authorID, err := helpers.GetAuthorID(c)

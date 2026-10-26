@@ -1,0 +1,117 @@
+basePath: /api/v1
+definitions:
+  domain.GetAllTasksResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      tasks:
+        items:
+          $ref: '#/definitions/domain.Task'
+        type: array
+      total:
+        type: integer
+    type: object
+  domain.Task:
+    properties:
+      assignee_id:
+        type: string
+      author_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      priority:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        example: invalid request body
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a simple task flow server
+  title: Swagger TaskFlow API
+  version: "1.0"
+paths:
+  /tasks:
+    get:
+      description: Get all user tasks
+      parameters:
+      - description: filter by assignee id
+        in: query
+        name: assignee_id
+        type: string
+      - description: task status
+        enum:
+        - to_do
+        - in_progress
+        - in_review
+        - done
+        - on_hold
+        - cancelled
+        in: query
+        name: status
+        type: string
+      - description: task priority
+        enum:
+        - low
+        - middle
+        - high
+        in: query
+        name: priority
+        type: string
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: page pagination param
+        in: query
+        name: page
+        type: integer
+      - description: limit pagination param
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetAllTasksResponse'
+        "400":
+          description: invalid query parameter
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all user tasks
+      tags:
+      - Tasks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
