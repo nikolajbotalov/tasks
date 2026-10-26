@@ -40,6 +40,19 @@ definitions:
       total:
         type: integer
     type: object
+  domain.GetTaskCommentsResponse:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/domain.TaskComment'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
   domain.RegisterResponse:
     properties:
       id:
@@ -64,6 +77,21 @@ definitions:
       status:
         type: string
       updated_at:
+        type: string
+    type: object
+  domain.TaskComment:
+    properties:
+      author_id:
+        type: string
+      author_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      task_id:
+        type: string
+      text:
         type: string
     type: object
   domain.TokenPair:
@@ -487,6 +515,51 @@ paths:
       summary: Update a task
       tags:
       - Tasks
+  /tasks/{id}/comments:
+    get:
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: page pagination param
+        in: query
+        name: page
+        type: integer
+      - description: limit pagination param
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetTaskCommentsResponse'
+        "400":
+          description: invalid task id, page or limit
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get task comments
+      tags:
+      - Comments
 securityDefinitions:
   BearerAuth:
     in: header
