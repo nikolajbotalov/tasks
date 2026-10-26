@@ -226,6 +226,42 @@ paths:
       tags:
       - Tasks
   /tasks/{id}:
+    delete:
+      parameters:
+      - description: task id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: task was deleted
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid task id
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: task not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a task
+      tags:
+      - Tasks
     get:
       parameters:
       - description: task id

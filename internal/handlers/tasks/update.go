@@ -63,6 +63,8 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": response.TaskUpdated})
+		c.JSON(http.StatusOK, response.MessageResponse{
+			Message: response.TaskUpdated,
+		})
 	}
 }
