@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"TaskFlow/internal/config"
 	"TaskFlow/internal/domain"
 	"TaskFlow/internal/handlers"
 	"TaskFlow/internal/handlers/middleware"
@@ -13,13 +12,13 @@ import (
 
 func SetupRoutes(
 	r *gin.Engine,
-	cfg *config.Config,
+	auth gin.HandlerFunc,
 	uc tasksUC.UseCases,
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
 	tasksProtected := r.Group("/api/v1/tasks")
-	tasksProtected.Use(middleware.JWTAuthMiddleware(cfg))
+	tasksProtected.Use(auth)
 	{
 		tasksProtected.GET("", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionTaskRead), GetAll(uc, logger))

@@ -11,11 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (uc *authUseCases) generateTokenPair(userID uuid.UUID, userRole domain.Role) (domain.TokenPair, error) {
+func (uc *authUseCases) generateTokenPair(userID uuid.UUID) (domain.TokenPair, error) {
 	access := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		domain.JWTID:   userID,
-		"exp":          jwt.NewNumericDate(time.Now().Add(uc.config.JWT.AccessTokenTTL)),
-		domain.JWTRole: userRole,
+		domain.JWTID: userID,
+		"exp":        jwt.NewNumericDate(time.Now().Add(uc.config.JWT.AccessTokenTTL)),
 	})
 
 	secret := []byte(uc.config.JWT.Secret)

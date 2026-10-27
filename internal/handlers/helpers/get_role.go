@@ -7,7 +7,7 @@ import (
 )
 
 func GetRole(c *gin.Context) (domain.Role, error) {
-	roleParam, exists := c.Get(domain.JWTRole)
+	roleParam, exists := c.Get(domain.CallerRole)
 	if !exists {
 		return "", domain.ErrUnknownRole
 	}

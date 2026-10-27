@@ -1,7 +1,6 @@
 package roles
 
 import (
-	"TaskFlow/internal/config"
 	"TaskFlow/internal/domain"
 	"TaskFlow/internal/handlers"
 	"TaskFlow/internal/handlers/middleware"
@@ -14,13 +13,13 @@ import (
 
 func SetupRoutes(
 	r *gin.Engine,
-	cfg *config.Config,
+	auth gin.HandlerFunc,
 	uc rolesUC.UseCases,
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
 	usersProtected := r.Group("/api/v1/users")
-	usersProtected.Use(middleware.JWTAuthMiddleware(cfg))
+	usersProtected.Use(auth)
 	{
 		usersProtected.GET("/roles", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionUserRead), GetAllUsersRoles(uc, logger))
