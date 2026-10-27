@@ -4,7 +4,10 @@ import (
 	"TaskFlow/internal/config"
 	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
+	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -13,7 +16,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
+type RoleProvider interface {
+	GetCurrentRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
+}
+
+func JWTAuthMiddleware(cfg *config.Config, roles RoleProvider, logger *slog.Logger) gin.HandlerFunc {
 	const bearerPrefix = "Bearer "
 
 	return func(c *gin.Context) {
@@ -49,26 +56,26 @@ func JWTAuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		roleStr, ok := claims[domain.JWTRole].(string)
-		if !ok {
-			abortUnauthorized(c, response.InvalidTokenClaims)
-			return
-		}
-
-		role := domain.Role(roleStr)
-		if !role.IsValid() {
-			abortUnauthorized(c, response.InvalidTokenRole)
-			return
-		}
-
 		idAsUUID, err := uuid.Parse(id)
 		if err != nil {
 			abortUnauthorized(c, response.InvalidTokenClaims)
 			return
 		}
 
+		role, err := roles.GetCurrentRole(c.Request.Context(), idAsUUID)
+		if err != nil {
+			if errors.Is(err, domain.ErrUserNotFound) {
+				abortUnauthorized(c, response.InvalidToken)
+				return
+			}
+
+			logger.Error("get caller role", slog.String("error", err.Error()))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			return
+		}
+
 		c.Set(domain.JWTID, idAsUUID)
-		c.Set(domain.JWTRole, role)
+		c.Set(domain.CallerRole, role)
 	}
 }
 

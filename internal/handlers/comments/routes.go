@@ -1,7 +1,6 @@
 package comments
 
 import (
-	"TaskFlow/internal/config"
 	"TaskFlow/internal/domain"
 	"TaskFlow/internal/handlers"
 	"TaskFlow/internal/handlers/middleware"
@@ -13,13 +12,13 @@ import (
 
 func SetupRoutes(
 	r *gin.Engine,
-	cfg *config.Config,
+	auth gin.HandlerFunc,
 	uc commentsUC.UseCases,
 	checker middleware.PermissionChecker,
 	logger *slog.Logger,
 ) {
 	commentRoutes := r.Group("/api/v1/tasks")
-	commentRoutes.Use(middleware.JWTAuthMiddleware(cfg))
+	commentRoutes.Use(auth)
 	{
 		commentRoutes.GET("/:id/comments", middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst),
 			middleware.RequirePermission(checker, domain.PermissionCommentRead), GetAllTaskComments(uc, logger))

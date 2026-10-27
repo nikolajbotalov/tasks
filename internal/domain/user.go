@@ -19,5 +19,4 @@ type User struct {
 type UserRow struct {
 	ID       uuid.UUID
 	Password string
-	Role     Role
 }

@@ -57,10 +57,11 @@ func NewServer(
 		logger.Error("set trusted proxies", slog.String("error", err.Error()))
 	}
 
+	authMiddleware := middleware.JWTAuthMiddleware(cfg, authUc, logger)
 	auth.SetupRoutes(router, authUc, logger)
-	tasks.SetupRoutes(router, cfg, tasksUc, checker, logger)
-	comments.SetupRoutes(router, cfg, commentsUC, checker, logger)
-	roles.SetupRoutes(router, cfg, rolesUc, checker, logger)
+	tasks.SetupRoutes(router, authMiddleware, tasksUc, checker, logger)
+	comments.SetupRoutes(router, authMiddleware, commentsUC, checker, logger)
+	roles.SetupRoutes(router, authMiddleware, rolesUc, checker, logger)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

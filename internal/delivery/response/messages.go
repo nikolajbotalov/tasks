@@ -20,7 +20,6 @@ const (
 	AuthorizationHeaderMissing = "authorization header missing"
 	InvalidToken               = "invalid token"
 	InvalidTokenClaims         = "invalid token claims"
-	InvalidTokenRole           = "invalid token role"
 	RateLimitExceeded          = "rate limit exceeded"
 	IncorrectUserID            = "no user id or incorrect format"
 	UnknownRole                = "unknown role"

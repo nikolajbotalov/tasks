@@ -29,7 +29,7 @@ func (uc *authUseCases) LoginUser(email, password string) (domain.TokenPair, err
 		return domain.TokenPair{}, fmt.Errorf("compare password: %w", err)
 	}
 
-	tokens, err := uc.generateTokenPair(user.ID, user.Role)
+	tokens, err := uc.generateTokenPair(user.ID)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf("generate token pair: %w", err)
 	}
