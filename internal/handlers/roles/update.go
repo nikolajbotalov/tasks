@@ -28,15 +28,22 @@ type updateUserRoleRequest struct {
 // @Success 200 {object} response.MessageResponse "role was updated"
 // @Failure 400 {object} response.ErrorResponse "invalid user id or request body"
 // @Failure 401 {object} response.ErrorResponse "unauthorized"
-// @Failure 403 {object} response.ErrorResponse "permission denied"
+// @Failure 403 {object} response.ErrorResponse "permission denied or self role change"
 // @Failure 404 {object} response.ErrorResponse "user not found"
+// @Failure 409 {object} response.ErrorResponse "cannot demote the last admin"
 // @Failure 422 {object} response.ValidationErrorResponse "validation error or unknown role"
 // @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
 // @Failure 500 {object} response.ErrorResponse "internal server error"
 // @Router /users/{id}/roles [put]
 func UpdateUserRole(uc rolesUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, err := helpers.GetUserID(c)
+		curUserID, err := helpers.GetCallerID(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.Unauthorized})
+			return
+		}
+
+		targetID, err := helpers.GetUserID(c)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{Error: response.IncorrectUserID})
 			return
@@ -49,7 +56,17 @@ func UpdateUserRole(uc rolesUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		if err = uc.UpdateUserRole(userID, req.Role); err != nil {
+		if err = uc.UpdateUserRole(c.Request.Context(), targetID, curUserID, req.Role); err != nil {
+			if errors.Is(err, domain.ErrSelfRoleChange) {
+				c.JSON(http.StatusForbidden, response.ErrorResponse{Error: response.OwnRoleChangeForbidden})
+				return
+			}
+
+			if errors.Is(err, domain.ErrLastAdmin) {
+				c.JSON(http.StatusConflict, response.ErrorResponse{Error: response.LastAdminDemotingForbidden})
+				return
+			}
+
 			if errors.Is(err, domain.ErrUnknownRole) {
 				c.JSON(http.StatusUnprocessableEntity, response.ErrorResponse{Error: response.UnknownRole})
 				return

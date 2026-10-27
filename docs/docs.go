@@ -766,13 +766,19 @@ const docTemplate = `{
                         }
                     },
                     "403": {
-                        "description": "permission denied",
+                        "description": "permission denied or self role change",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "cannot demote the last admin",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
