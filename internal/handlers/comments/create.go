@@ -42,7 +42,7 @@ func CreateTaskComment(uc commentsUC.UseCases, logger *slog.Logger) gin.HandlerF
 				return
 			}
 
-			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.IncorrectAuthorID})
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.Unauthorized})
 			return
 		}
 

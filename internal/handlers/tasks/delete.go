@@ -34,7 +34,7 @@ func DeleteTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 				return
 			}
 
-			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.IncorrectAuthorID})
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.Unauthorized})
 			return
 		}
 

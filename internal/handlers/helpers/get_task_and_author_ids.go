@@ -11,7 +11,7 @@ func GetTaskAndAuthorIDs(c *gin.Context) (id uuid.UUID, authorID uuid.UUID, err 
 		return uuid.Nil, uuid.Nil, err
 	}
 
-	authorID, err = GetAuthorID(c)
+	authorID, err = GetCallerID(c)
 	if err != nil {
 		return uuid.Nil, uuid.Nil, err
 	}

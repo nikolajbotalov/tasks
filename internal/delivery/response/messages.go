@@ -4,7 +4,7 @@ const (
 	InvalidCredentials         = "invalid login or password"
 	Internal                   = "internal server error"
 	EmailExists                = "email already exists"
-	IncorrectAuthorID          = "no author id or incorrect format"
+	Unauthorized               = "unauthorized"
 	InvalidPageParam           = "invalid page param"
 	InvalidLimitParam          = "invalid limit param"
 	IncorrectTaskID            = "no task id or incorrect format"
@@ -26,6 +26,8 @@ const (
 	UnknownRole                = "unknown role"
 	UserNotFound               = "user not found"
 	RoleUpdated                = "role was updated"
+	OwnRoleChangeForbidden     = "changing your own role is not allowed"
+	LastAdminDemotingForbidden = "cannot demote the last admin"
 )
 
 type MessageResponse struct {

@@ -35,9 +35,9 @@ import (
 // @Router /tasks [get]
 func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authorID, err := helpers.GetAuthorID(c)
+		authorID, err := helpers.GetCallerID(c)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.IncorrectAuthorID})
+			c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.Unauthorized})
 			return
 		}
 
