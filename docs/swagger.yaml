@@ -18,14 +18,9 @@ definitions:
       password:
         minLength: 8
         type: string
-      username:
-        maxLength: 32
-        minLength: 2
-        type: string
     required:
     - email
     - password
-    - username
     type: object
   comments.createCommentRequest:
     properties:
@@ -49,6 +44,11 @@ definitions:
       total:
         type: integer
     type: object
+  domain.GetProfileResponse:
+    properties:
+      profile:
+        $ref: '#/definitions/domain.Profile'
+    type: object
   domain.GetTaskCommentsResponse:
     properties:
       comments:
@@ -68,6 +68,30 @@ definitions:
         items:
           $ref: '#/definitions/domain.Role'
         type: array
+    type: object
+  domain.LoginUserResponse:
+    properties:
+      access_token:
+        type: string
+      id:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  domain.Profile:
+    properties:
+      created_at:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
     type: object
   domain.RegisterResponse:
     properties:
@@ -120,11 +144,19 @@ definitions:
       text:
         type: string
     type: object
-  domain.TokenPair:
+  profiles.updateProfileRequest:
     properties:
-      access_token:
+      first_name:
+        maxLength: 100
+        minLength: 2
         type: string
-      refresh_token:
+      last_name:
+        maxLength: 100
+        minLength: 2
+        type: string
+      username:
+        maxLength: 100
+        minLength: 2
         type: string
     type: object
   response.ErrorResponse:
@@ -242,7 +274,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.TokenPair'
+            $ref: '#/definitions/domain.LoginUserResponse'
         "400":
           description: invalid request body
           schema:
@@ -307,6 +339,97 @@ paths:
       summary: Create new user
       tags:
       - Auth
+  /profiles/{id}:
+    get:
+      parameters:
+      - description: user id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.GetProfileResponse'
+        "400":
+          description: invalid user id
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: profile not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get profile by user ID
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: user id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/profiles.updateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: profile was update
+          schema:
+            $ref: '#/definitions/response.MessageResponse'
+        "400":
+          description: invalid user or format id
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: profile not found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "422":
+          description: validation errors
+          schema:
+            $ref: '#/definitions/response.ValidationErrorResponse'
+        "429":
+          description: rate limit exceeded
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Update profile
+      tags:
+      - Profile
   /tasks:
     get:
       parameters:

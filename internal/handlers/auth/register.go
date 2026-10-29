@@ -10,12 +10,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type registerUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Username string `json:"username" binding:"required,min=2,max=32"`
 	Password string `json:"password" binding:"required,min=8"`
 }
 
@@ -40,9 +38,7 @@ func RegisterUser(uc auth.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		newUUID := uuid.New()
-
-		err := uc.CreateUser(newUUID.String(), registerUser.Username, registerUser.Email, registerUser.Password)
+		id, err := uc.CreateUser(c.Request.Context(), registerUser.Email, registerUser.Password)
 		if err != nil {
 			if errors.Is(err, domain.ErrEmailExists) {
 				c.JSON(http.StatusConflict, response.ErrorResponse{
@@ -59,7 +55,7 @@ func RegisterUser(uc auth.UseCases, logger *slog.Logger) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, domain.RegisterResponse{
-			ID: newUUID.String(),
+			ID: id.String(),
 		})
 	}
 }

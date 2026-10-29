@@ -42,7 +42,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.TokenPair"
+                            "$ref": "#/definitions/domain.LoginUserResponse"
                         }
                     },
                     "400": {
@@ -122,6 +122,145 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "validation error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ValidationErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "rate limit exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/profiles/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get profile by user ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.GetProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid user id",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "profile not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "rate limit exceeded",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/profiles.updateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "profile was update",
+                        "schema": {
+                            "$ref": "#/definitions/response.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid user or format id",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "profile not found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "validation errors",
                         "schema": {
                             "$ref": "#/definitions/response.ValidationErrorResponse"
                         }
@@ -826,8 +965,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "password",
-                "username"
+                "password"
             ],
             "properties": {
                 "email": {
@@ -836,11 +974,6 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 32,
-                    "minLength": 2
                 }
             }
         },
@@ -877,6 +1010,14 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.GetProfileResponse": {
+            "type": "object",
+            "properties": {
+                "profile": {
+                    "$ref": "#/definitions/domain.Profile"
+                }
+            }
+        },
         "domain.GetTaskCommentsResponse": {
             "type": "object",
             "properties": {
@@ -905,6 +1046,43 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/domain.Role"
                     }
+                }
+            }
+        },
+        "domain.LoginUserResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Profile": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -984,14 +1162,23 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.TokenPair": {
+        "profiles.updateProfileRequest": {
             "type": "object",
             "properties": {
-                "access_token": {
-                    "type": "string"
+                "first_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
                 },
-                "refresh_token": {
-                    "type": "string"
+                "last_name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 2
                 }
             }
         },

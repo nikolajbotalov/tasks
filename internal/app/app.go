@@ -6,10 +6,12 @@ import (
 	commentsRepo "TaskFlow/internal/repository/comment"
 	permissionsRepo "TaskFlow/internal/repository/permissions"
 	"TaskFlow/internal/repository/postgres"
+	profilesRepo "TaskFlow/internal/repository/profiles"
 	rolesRepo "TaskFlow/internal/repository/roles"
 	tasksRepo "TaskFlow/internal/repository/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
 	commentsUC "TaskFlow/internal/use-cases/comment"
+	profilesUC "TaskFlow/internal/use-cases/profiles"
 	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"TaskFlow/migrations"
@@ -61,6 +63,8 @@ func NewApp() (*App, error) {
 
 	authRepository := authRepo.NewAuthRepository(db)
 	authUseCases := authUC.NewAuthUseCases(authRepository, cfg)
+	profileRepository := profilesRepo.NewProfilesRepository(db)
+	profilesUseCases := profilesUC.NewProfilesUseCases(profileRepository)
 	taskRepository := tasksRepo.NewTasksRepository(db)
 	tasksUseCases := tasksUC.NewTasksUseCases(taskRepository)
 	commentsRepository := commentsRepo.NewCommentRepository(db)
@@ -75,7 +79,16 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	server := NewServer(logger, cfg, authUseCases, tasksUseCases, commentsUseCases, rolePermissions, rolesUseCases)
+	server := NewServer(
+		logger,
+		cfg,
+		authUseCases,
+		tasksUseCases,
+		commentsUseCases,
+		rolePermissions,
+		rolesUseCases,
+		profilesUseCases,
+	)
 
 	return &App{
 		Logger: logger,

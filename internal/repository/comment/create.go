@@ -20,9 +20,9 @@ func (r *commentRepository) CreateComment(ID, taskID, authorID uuid.UUID, text s
 						WHERE EXISTS (SELECT 1 FROM tasks WHERE id = $2)
 					    RETURNING id, task_id, author_id, text, created_at
 					)
-					SELECT i.id, i.task_id, i.author_id, u.username, i.text, i.created_at
+					SELECT i.id, i.task_id, i.author_id, COALESCE(p.username, '') AS author_name, i.text, i.created_at
 					FROM inserted i
-					JOIN users u ON u.id = i.author_id`, ID, taskID, authorID, text, time.Now()).
+					LEFT JOIN profiles p ON p.user_id = i.author_id`, ID, taskID, authorID, text, time.Now()).
 		Scan(&comment.ID, &comment.TaskID, &comment.AuthorID, &comment.AuthorName, &comment.Text, &comment.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

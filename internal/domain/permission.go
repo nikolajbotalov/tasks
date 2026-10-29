@@ -11,6 +11,8 @@ const (
 	PermissionCommentCreate Permission = "comment:create"
 	PermissionUserRead      Permission = "user:read"
 	PermissionUserUpdate    Permission = "user:update"
+	PermissionProfileRead   Permission = "profile:read"
+	PermissionProfileUpdate Permission = "profile:update"
 )
 
 type RolePermissions map[Role]map[Permission]struct{}

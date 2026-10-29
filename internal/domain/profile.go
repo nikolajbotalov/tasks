@@ -1,0 +1,20 @@
+package domain
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type Profile struct {
+	UserID    uuid.UUID `json:"user_id"`
+	Username  *string   `json:"username"`
+	FirstName *string   `json:"first_name"`
+	LastName  *string   `json:"last_name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type GetProfileResponse struct {
+	Profile Profile `json:"profile"`
+}
