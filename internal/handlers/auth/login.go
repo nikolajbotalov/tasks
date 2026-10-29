@@ -23,7 +23,7 @@ type loginUserRequest struct {
 // @Accept json
 // @Produce json
 // @Param request body loginUserRequest true "user request body"
-// @Success 200 {object} domain.TokenPair
+// @Success 200 {object} domain.LoginUserResponse
 // @Failure 400 {object} response.ErrorResponse "invalid request body"
 // @Failure 401 {object} response.ErrorResponse "invalid login or password"
 // @Failure 422 {object} response.ValidationErrorResponse "validation error"
@@ -38,7 +38,7 @@ func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		tokens, err := uc.LoginUser(loginRequest.Email, loginRequest.Password)
+		tokens, userID, err := uc.LoginUser(c.Request.Context(), loginRequest.Email, loginRequest.Password)
 		if err != nil {
 			if errors.Is(err, domain.ErrInvalidCredentials) {
 				c.JSON(http.StatusUnauthorized, response.ErrorResponse{Error: response.InvalidCredentials})
@@ -52,7 +52,8 @@ func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, domain.TokenPair{
+		c.JSON(http.StatusOK, domain.LoginUserResponse{
+			ID:           userID,
 			AccessToken:  tokens.AccessToken,
 			RefreshToken: tokens.RefreshToken,
 		})

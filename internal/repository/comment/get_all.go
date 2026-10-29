@@ -9,9 +9,12 @@ import (
 
 func (r *commentRepository) GetCommentList(taskID uuid.UUID, page, limit int) ([]domain.TaskComment, int, error) {
 	rows, err := r.db.Query(
-		`SELECT c.id, c.task_id, c.author_id, u.username AS author_name, c.text, c.created_at
-				FROM task_comments c JOIN users u ON u.id = c.author_id
-				WHERE c.task_id = $1 ORDER BY c.created_at LIMIT $2 OFFSET $3`, taskID, limit, (page-1)*limit)
+		`SELECT c.id, c.task_id, c.author_id, COALESCE(p.username, '') AS author_name, c.text, c.created_at
+				FROM task_comments c 
+				LEFT JOIN profiles p ON p.user_id = c.author_id
+				WHERE c.task_id = $1 
+				ORDER BY c.created_at 
+				LIMIT $2 OFFSET $3`, taskID, limit, (page-1)*limit)
 	if err != nil {
 		return []domain.TaskComment{}, 0, fmt.Errorf("query comments for task  %s: %w", taskID, err)
 	}

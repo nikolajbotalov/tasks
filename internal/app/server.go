@@ -5,10 +5,12 @@ import (
 	"TaskFlow/internal/handlers/auth"
 	"TaskFlow/internal/handlers/comments"
 	"TaskFlow/internal/handlers/middleware"
+	"TaskFlow/internal/handlers/profiles"
 	"TaskFlow/internal/handlers/roles"
 	"TaskFlow/internal/handlers/tasks"
 	authUC "TaskFlow/internal/use-cases/auth"
 	commentsUC "TaskFlow/internal/use-cases/comment"
+	profilesUC "TaskFlow/internal/use-cases/profiles"
 	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
 	"context"
@@ -40,6 +42,7 @@ func NewServer(
 	commentsUC commentsUC.UseCases,
 	checker middleware.PermissionChecker,
 	rolesUc rolesUC.UseCases,
+	profilesUc profilesUC.UseCases,
 ) *Server {
 	router := gin.New()
 
@@ -59,6 +62,7 @@ func NewServer(
 
 	authMiddleware := middleware.JWTAuthMiddleware(cfg, authUc, logger)
 	auth.SetupRoutes(router, authUc, logger)
+	profiles.SetupRoutes(router, authMiddleware, profilesUc, checker, logger)
 	tasks.SetupRoutes(router, authMiddleware, tasksUc, checker, logger)
 	comments.SetupRoutes(router, authMiddleware, commentsUC, checker, logger)
 	roles.SetupRoutes(router, authMiddleware, rolesUc, checker, logger)

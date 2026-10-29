@@ -9,14 +9,14 @@ import (
 )
 
 type Repository interface {
-	CreateUser(id, username, email, password string) error
-	FindUserByEmail(email string) (domain.UserRow, error)
+	CreateUser(ctx context.Context, id, email, password string) error
+	FindUserByEmail(ctx context.Context, email string) (domain.UserRow, error)
 	GetUserRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
 }
 
 type UseCases interface {
-	CreateUser(id, username, email, password string) error
-	LoginUser(email, password string) (domain.TokenPair, error)
+	CreateUser(ctx context.Context, email, password string) (uuid.UUID, error)
+	LoginUser(ctx context.Context, email, password string) (domain.TokenPair, uuid.UUID, error)
 	GetCurrentRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
 }
 

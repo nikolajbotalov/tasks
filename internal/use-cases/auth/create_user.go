@@ -2,28 +2,32 @@ package auth
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (uc *authUseCases) CreateUser(id, username, email, password string) error {
+func (uc *authUseCases) CreateUser(ctx context.Context, email, password string) (uuid.UUID, error) {
 	normalizedEmail := domain.NormalizeEmail(email)
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("%w: %w", domain.ErrHashedPassword, err)
+		return uuid.Nil, fmt.Errorf("%w: %w", domain.ErrHashedPassword, err)
 	}
 
-	err = uc.repo.CreateUser(id, username, normalizedEmail, string(hashedPassword))
+	id := uuid.New()
+
+	err = uc.repo.CreateUser(ctx, id.String(), normalizedEmail, string(hashedPassword))
 	if err != nil {
 		if errors.Is(err, domain.ErrEmailExists) {
-			return fmt.Errorf("%w: %w", domain.ErrEmailExists, err)
+			return uuid.Nil, fmt.Errorf("%w: %w", domain.ErrEmailExists, err)
 		}
 
-		return fmt.Errorf("create user: %w", err)
+		return uuid.Nil, fmt.Errorf("create user: %w", err)
 	}
 
-	return nil
+	return id, nil
 }
