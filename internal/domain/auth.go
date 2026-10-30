@@ -8,3 +8,8 @@ type TokenPair struct {
 type RegisterResponse struct {
 	ID string `json:"id"`
 }
+
+type AuthState struct {
+	Role         Role
+	TokenVersion int
+}

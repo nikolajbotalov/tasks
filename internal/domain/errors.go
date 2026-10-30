@@ -22,4 +22,5 @@ var (
 	ErrGetUserID            = errors.New("no user id or incorrect format")
 	ErrSelfRoleChange       = errors.New("own role change not allowed")
 	ErrLastAdmin            = errors.New("demoting the last admin is not allowed")
+	ErrInvalidRefreshToken  = errors.New("invalid refresh token")
 )

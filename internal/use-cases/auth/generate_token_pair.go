@@ -2,8 +2,6 @@ package auth
 
 import (
 	"TaskFlow/internal/domain"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -11,26 +9,35 @@ import (
 	"github.com/google/uuid"
 )
 
-func (uc *authUseCases) generateTokenPair(userID uuid.UUID) (domain.TokenPair, error) {
-	access := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		domain.JWTID: userID,
-		"exp":        jwt.NewNumericDate(time.Now().Add(uc.config.JWT.AccessTokenTTL)),
-	})
-
-	secret := []byte(uc.config.JWT.Secret)
-	accessToken, err := access.SignedString(secret)
+func (uc *authUseCases) generateTokenPair(userID uuid.UUID, version int) (domain.TokenPair, error) {
+	accessToken, err := uc.signToken(userID, version, domain.JWTTypeAccess, uc.config.JWT.AccessTokenTTL)
 	if err != nil {
-		return domain.TokenPair{}, fmt.Errorf("sign access token: %w", err)
+		return domain.TokenPair{}, err
 	}
 
-	refresh := make([]byte, 32)
-	if _, err = rand.Read(refresh); err != nil {
-		return domain.TokenPair{}, fmt.Errorf("generate refresh token: %w", err)
+	refreshToken, err := uc.signToken(userID, version, domain.JWTTypeRefresh, uc.config.JWT.RefreshTokenTTL)
+	if err != nil {
+		return domain.TokenPair{}, err
 	}
-	refreshToken := base64.URLEncoding.EncodeToString(refresh)
 
 	return domain.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (uc *authUseCases) signToken(userID uuid.UUID, version int, typ string, ttl time.Duration) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		domain.JWTID:           userID,
+		domain.JWTTokenVersion: version,
+		domain.JWTType:         typ,
+		"exp":                  jwt.NewNumericDate(time.Now().Add(ttl)),
+	})
+
+	signed, err := token.SignedString([]byte(uc.config.JWT.Secret))
+	if err != nil {
+		return "", fmt.Errorf("sign %s token: %w", typ, err)
+	}
+
+	return signed, nil
 }

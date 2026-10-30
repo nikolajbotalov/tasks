@@ -8,7 +8,7 @@
 ### Основные фичи (MVP)
 
 1. **Аутентификация + роли**
-    - JWT или session-based auth
+    - JWT (access + refresh), обновление токенов и logout с отзывом
     - Роли: `admin`, `user`, `viewer`
     - Разные права доступа к задачам, комментариям и назначению ролей
       (проверка прав через `role_permissions`)
@@ -51,6 +51,8 @@
 ```
 POST   /api/v1/auth/register
 POST   /api/v1/auth/login
+POST   /api/v1/auth/refresh
+POST   /api/v1/auth/logout
 GET    /api/v1/tasks?page=1&limit=20&status=to_do&priority=high&assignee_id=&search=
 GET    /api/v1/tasks/:id
 POST   /api/v1/tasks
@@ -98,6 +100,24 @@ payload токена.
 `{"id": "…", "access_token": "…", "refresh_token": "…"}`; `id` можно использовать
 для запроса собственного профиля.
 
+Оба токена — JWT (HS256) с claims `id`, `ver`, `typ` и `exp`; роль в токены не
+кладётся. Access-токен (`typ="access"`) живёт `JWT_ACCESS_TTL` (по умолчанию
+24h), refresh (`typ="refresh"`) — `JWT_REFRESH_TTL` (по умолчанию 30 дней).
+`ver` — текущий `users.token_version`, который middleware сверяет с БД на каждом
+защищённом запросе.
+
+`POST /api/v1/auth/refresh` принимает `{"refresh_token": "…"}` и возвращает новую
+пару `{"access_token": "…", "refresh_token": "…"}`. Refresh-токен проверяется по
+подписи, `typ`, `exp` и `ver`; серверного хранилища refresh-токенов нет, поэтому
+он не ротируется и живёт до `exp` или до logout. Невалидный или просроченный
+токен → `401`.
+
+`POST /api/v1/auth/logout` требует `Authorization: Bearer <access_token>` и
+увеличивает `users.token_version`; все ранее выданные токены пользователя — и
+access, и refresh — становятся невалидными сразу, следующий логин получает
+токены с новой версией. Logout **глобальный**: завершает сессию на всех
+устройствах. Ответ — `200 {"message": "logged out"}`.
+
 Все маршруты `/api/v1/profiles…` требуют `Authorization: Bearer <token>`.
 `GET /api/v1/profiles/:id` — профиль пользователя, право `profile:read` (есть у
 всех ролей); ответ — `200 {"profile": {"user_id": "…", "username": null,
@@ -115,7 +135,7 @@ payload токена.
 ### Что это даёт тебе
 
 - **БД**: PostgreSQL, миграции, транзакции
-- **Auth**: JWT, middleware для ролей
+- **Auth**: JWT (access/refresh), middleware ролей, отзыв токенов через `token_version`
 - **API design**: RESTful conventions, pagination, error handling
 - **Validation**: input validation, custom errors
 - **Практика**: полная реализация с нуля
@@ -135,15 +155,16 @@ payload токена.
 | `BIND_IP` | нет | `0.0.0.0` | адрес, который слушает сервер |
 | `PORT` | нет | `8080` | порт HTTP-сервера |
 | `JWT_SECRET` | да | — | ключ подписи JWT (HS256) |
-| `JWT_ACCESS_TTL` | нет | `24h` | время жизни access-токена; на актуальность роли не влияет |
+| `JWT_ACCESS_TTL` | нет | `24h` | время жизни access-токена; logout отзывает его досрочно, на актуальность роли не влияет |
+| `JWT_REFRESH_TTL` | нет | `720h` | время жизни refresh-токена (30 дней); logout отзывает его досрочно |
 | `DB_HOST` | нет | `localhost` | хост PostgreSQL |
 | `DB_PORT` | нет | `5432` | порт PostgreSQL |
 | `DB_NAME` | нет | `taskflow` | имя БД |
 | `DB_USER` | нет | `postgres` | пользователь БД |
 | `DB_PASSWORD` | да | — | пароль БД |
 | `DB_SSL_MODE` | нет | `disable` | режим SSL (`disable`/`require`/`verify-full`) |
-| `MAX_OPEN_CONNS` | нет | `25` | максимальное число открытых соединений в пуле |
-| `MAX_IDLE_CONNS` | нет | `2` | максимальное число простаивающих соединений в пуле |
+| `DB_MAX_OPEN_CONNS` | нет | `25` | максимальное число открытых соединений в пуле |
+| `DB_MAX_IDLE_CONNS` | нет | `2` | максимальное число простаивающих соединений в пуле |
 
 ### Запуск локально
 
@@ -166,8 +187,9 @@ payload токена.
 Создание и настройка подключения к PostgreSQL вынесены в
 `internal/repository/postgres/connect.go` (`ConnectDB`): DSN собирается из
 переменных `DB_*`, открывается `*sql.DB`, задаются параметры пула
-(`SetMaxOpenConns` — `MAX_OPEN_CONNS`, `SetMaxIdleConns` — `MAX_IDLE_CONNS`,
-`SetConnMaxLifetime` — 1 минута), выполняется `Ping` и применяются миграции
+(`SetMaxOpenConns` — `DB_MAX_OPEN_CONNS`, `SetMaxIdleConns` —
+`DB_MAX_IDLE_CONNS`, `SetConnMaxLifetime` — 1 минута), выполняется `Ping` и
+применяются миграции
 (`RunMigrations`). `internal/app/app.go` только вызывает конструктор и передаёт
 полученный `*sql.DB` в репозитории; пул открывается один раз и закрывается тоже
 один раз — в `App.Close()`, после остановки HTTP-сервера.
@@ -192,11 +214,12 @@ payload токена.
 | `000006` | `task_comments` (FK на `tasks` и `users`) |
 | `000007` | `profiles` (1:1 с `users`, FK с `ON DELETE CASCADE`, `username` nullable); `users.username` переносится в `profiles` и удаляется |
 | `000008` | сид `profile:read`/`profile:update` для `admin`, `user`, `viewer`; итоговая матрица — `admin` 10, `user` 8, `viewer` 4 |
+| `000009` | `users.token_version` (`INTEGER NOT NULL DEFAULT 0`) — версия токенов для мгновенного logout |
 
 Правила:
 
 - **Применённую миграцию не редактируют.** Изменения схемы — новой версией
-  (`000009_*.up.sql`). `golang-migrate` не хранит контрольных сумм, поэтому
+  (`000010_*.up.sql`). `golang-migrate` не хранит контрольных сумм, поэтому
   правка старого файла на уже мигрированной БД не заметна, а на чистой даст
   другую схему.
 - **Пара `up`/`down` обязательна.** Для данных `down` удаляет только то, что
@@ -220,7 +243,7 @@ payload токена.
   Перелогин не нужен — роль подхватывается из БД на следующем запросе.
 - **Проверка** — только на пустой БД: `go build`/`go vet` SQL не валидируют.
   Быстрый цикл: `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` → `go run .` →
-  `SELECT version, dirty FROM schema_migrations;` (ожидается `8`, `false`).
+  `SELECT version, dirty FROM schema_migrations;` (ожидается `9`, `false`).
 - Каталог `migrations/` остаётся на диске, поэтому для ручных операций применим и
   CLI: `migrate -path migrations -database "postgres://…" up|down`.
 
@@ -261,13 +284,17 @@ CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/sw
 
 ### Реализовано
 
-1. **Аутентификация и роли** — `POST /api/v1/auth/register`, `POST /api/v1/auth/login`,
-   JWT (HS256), хеширование паролей (bcrypt), middleware проверки токена.
-   Роли `admin`/`user`/`viewer`; роль читается из БД на каждом запросе (в токене
-   её нет); проверка разрешений (`task:*`, `comment:*`, `user:*`, `profile:*`)
-   на маршрутах через `RequirePermission`. Регистрация принимает только `email`
-   и `password` и создаёт аккаунт и пустой профиль одной транзакцией; логин
-   возвращает `id` и пару токенов плоским объектом.
+1. **Аутентификация и роли** — `POST /api/v1/auth/register`,
+   `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`,
+   `POST /api/v1/auth/logout`; JWT (HS256), хеширование паролей (bcrypt),
+   middleware проверки access-токена. Access и refresh различаются claim `typ`;
+   `ver` сверяется с `users.token_version`, поэтому logout мгновенно отзывает все
+   ранее выданные токены пользователя. Роли `admin`/`user`/`viewer`; роль читается
+   из БД на каждом запросе (в токене её нет); проверка разрешений (`task:*`,
+   `comment:*`, `user:*`, `profile:*`) на маршрутах через `RequirePermission`.
+   Регистрация принимает только `email` и `password` и создаёт аккаунт и пустой
+   профиль одной транзакцией; логин возвращает `id` и пару токенов плоским
+   объектом.
 2. **CRUD задач** — создание, список, получение по id, частичное обновление,
    удаление; фильтрация по `status`/`priority`/`assignee_id` и поиск `search`
    по `name`/`description` (`ILIKE`, до 100 символов). Слои
@@ -314,7 +341,7 @@ CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/sw
 12. **Миграции БД** — `golang-migrate`; SQL в `migrations/` встроен в бинарник
     (`//go:embed`, `migrations/embed.go`) и применяется при старте
     (`internal/repository/postgres/migrate.go`); история — в `schema_migrations`;
-    DDL всех таблиц и сид ролей/прав — `000001…000008` (см. «Миграции БД»).
+    DDL всех таблиц и сид ролей/прав — `000001…000009` (см. «Миграции БД»).
 13. **Swagger/OpenAPI** — `swag` + `gin-swagger`: аннотации на хендлерах,
     сгенерированные `docs/` (`docs.go`, `swagger.json`, `swagger.yaml`)
     вкоммичены; UI — `/swagger/index.html`, спека — `/swagger/doc.json` (вне
@@ -333,11 +360,6 @@ CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/sw
    вынесены в конфиг (см. раздел «Конфигурация приложения»), graceful shutdown и
    fail-fast на старте реализованы (`internal/app/server.go`); осталось:
    Docker/compose и тесты.
-2. **Сессии и отзыв токенов** — `refresh_token` генерируется при логине, но нигде
-   не хранится и не проверяется, эндпоинта обновления нет. Отозвать уже выданный
-   access-токен нельзя: он действует до `exp` (`JWT_ACCESS_TTL`, по умолчанию
-   24h). Нужны таблица сессий, ротация refresh-токена, `logout` и `token_version`
-   для мгновенного отзыва.
 
 ---
 
@@ -387,15 +409,27 @@ CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/sw
   и профилей (`handler → use-case → repository`; `QueryContext`/`ExecContext`/
   `BeginTx`). Контекст приходит из `c.Request.Context()`; use-case и репозитории
   не создают `context.Background()` в обычном потоке.
-- Роль читается из БД на каждом защищённом запросе: смена роли, включая снижение
-  прав, действует сразу и без перелогина, а токен удалённого пользователя
-  перестаёт работать (`401`). Цена — дополнительный `SELECT` по первичному ключу
-  на каждый запрос; при недоступной БД защищённые маршруты отвечают `500`
-  (fail-closed), а не работают по устаревшей роли.
-- Отзыва токенов нет: смена пароля, «выйти на всех устройствах» и кража
-  access-токена не инвалидируют уже выданный токен — он действует до `exp`
-  (`JWT_ACCESS_TTL`, по умолчанию 24h). Для этого нужны сессии и `token_version`
-  (см. «Осталось»).
+- Роль и `token_version` читаются из БД на каждом защищённом запросе одним
+  `SELECT` по первичному ключу (`GetAuthState`): смена роли, включая снижение
+  прав, действует сразу и без перелогина, logout отзывает токены мгновенно, а
+  токен удалённого пользователя перестаёт работать (`401`). При недоступной БД
+  защищённые маршруты отвечают `500` (fail-closed), а не работают по устаревшей
+  роли.
+- Logout глобальный: `users.token_version` увеличивается для пользователя целиком,
+  поэтому выход на одном устройстве завершает сессии на всех. Per-device сессий
+  нет — для них нужна таблица сессий.
+- Refresh-токены stateless: сервер их не хранит и не ротирует, поэтому старый
+  refresh остаётся валиден до `exp` (`JWT_REFRESH_TTL`, 30 дней) или до logout.
+  При краже refresh-токена окно компрометации — до истечения срока или выхода
+  пользователя; отозвать отдельный refresh-токен и обнаружить его повторное
+  использование нельзя (см. «Осталось»).
+- Токены, выданные до появления claims `typ`/`ver` (до миграции `000009`), после
+  деплоя отклоняются с `401` — нужен повторный логин.
+- `/auth/refresh` и `/auth/logout` входят в группу `/api/v1/auth/*` и используют
+  строгий лимитер (0.1 rps, burst 5 на IP): при исчерпанном бюджете logout вернёт
+  `429`, и ранее выданные токены останутся валидны до `exp`.
+- TTL токенов (`JWT_ACCESS_TTL`/`JWT_REFRESH_TTL`) не валидируются при старте:
+  нулевое или отрицательное значение даст сразу истёкшие токены.
 - `GET /api/v1/users/roles` возвращает каталог всех ролей, хотя по пути читается
   как «роли пользователя»; `PUT /api/v1/users/:id/roles` меняет роль конкретного
   пользователя. Профили уже вынесены в отдельную таблицу, но путь каталога ролей
@@ -420,10 +454,9 @@ CLI ставится отдельно: `go install github.com/swaggo/swag/cmd/sw
 - `SlogMiddleware` (`internal/app/server.go`): ветка `c.Errors` не используется
   (никто не вызывает `c.Error`), не проставляется request id, `query`
   логируется без фильтрации.
-- Параметры пула читаются из env `MAX_OPEN_CONNS`/`MAX_IDLE_CONNS` — без
-  префикса `DB_`, что расходится с правилами именования; `SetConnMaxLifetime`
-  зафиксирован константой `1m`. При ошибке `Ping` или миграций `ConnectDB` не
-  закрывает пул.
+- Параметры пула читаются из `DB_MAX_OPEN_CONNS`/`DB_MAX_IDLE_CONNS`;
+  `SetConnMaxLifetime` зафиксирован константой `1m`. При ошибке `Ping` или
+  миграций `ConnectDB` не закрывает пул.
 - Rate limiting хранит карту клиентов в памяти процесса: записи чистятся по TTL
   только при поступлении запросов, а бюджет считается по `ClientIP()` — за общим
   NAT или reverse-proxy без списка доверенных CIDR все клиенты делят один лимит.

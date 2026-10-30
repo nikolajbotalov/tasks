@@ -64,7 +64,7 @@ func NewServer(
 	authMiddleware := middleware.JWTAuthMiddleware(cfg, authUc, logger)
 	unprotectedRateLimiter := middleware.RateLimiter(handlers.UnprotectedRateLimit, handlers.UnprotectedRateBurst)
 	protectedRateLimiter := middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst)
-	auth.SetupRoutes(router, unprotectedRateLimiter, authUc, logger)
+	auth.SetupRoutes(router, unprotectedRateLimiter, authMiddleware, authUc, logger)
 	profiles.SetupRoutes(router, authMiddleware, protectedRateLimiter, profilesUc, checker, logger)
 	tasks.SetupRoutes(router, authMiddleware, protectedRateLimiter, tasksUc, checker, logger)
 	comments.SetupRoutes(router, authMiddleware, protectedRateLimiter, commentsUC, checker, logger)

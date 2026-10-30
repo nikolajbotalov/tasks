@@ -31,6 +31,8 @@ const (
 	RoleUpdated                   = "role was updated"
 	OwnRoleChangeForbidden        = "changing your own role is not allowed"
 	LastAdminDemotingForbidden    = "cannot demote the last admin"
+	InvalidRefreshToken           = "invalid refresh token"
+	LoggedOut                     = "logged out"
 )
 
 type MessageResponse struct {

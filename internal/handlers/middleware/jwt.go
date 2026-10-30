@@ -16,11 +16,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type RoleProvider interface {
-	GetCurrentRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
+type AuthStateProvider interface {
+	GetAuthState(ctx context.Context, id uuid.UUID) (domain.AuthState, error)
 }
 
-func JWTAuthMiddleware(cfg *config.Config, roles RoleProvider, logger *slog.Logger) gin.HandlerFunc {
+func JWTAuthMiddleware(cfg *config.Config, provider AuthStateProvider, logger *slog.Logger) gin.HandlerFunc {
 	const bearerPrefix = "Bearer "
 
 	return func(c *gin.Context) {
@@ -50,6 +50,12 @@ func JWTAuthMiddleware(cfg *config.Config, roles RoleProvider, logger *slog.Logg
 			return
 		}
 
+		typ, ok := claims[domain.JWTType].(string)
+		if !ok || typ != domain.JWTTypeAccess {
+			abortUnauthorized(c, response.InvalidTokenClaims)
+			return
+		}
+
 		id, ok := claims[domain.JWTID].(string)
 		if !ok {
 			abortUnauthorized(c, response.InvalidTokenClaims)
@@ -62,20 +68,31 @@ func JWTAuthMiddleware(cfg *config.Config, roles RoleProvider, logger *slog.Logg
 			return
 		}
 
-		role, err := roles.GetCurrentRole(c.Request.Context(), idAsUUID)
+		version, ok := claims[domain.JWTTokenVersion].(float64)
+		if !ok {
+			abortUnauthorized(c, response.InvalidTokenClaims)
+			return
+		}
+
+		state, err := provider.GetAuthState(c.Request.Context(), idAsUUID)
 		if err != nil {
 			if errors.Is(err, domain.ErrUserNotFound) {
 				abortUnauthorized(c, response.InvalidToken)
 				return
 			}
 
-			logger.Error("get caller role", slog.String("error", err.Error()))
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": response.Internal})
+			logger.Error("get auth state", slog.String("error", err.Error()))
+			c.AbortWithStatusJSON(http.StatusInternalServerError, response.ErrorResponse{Error: response.Internal})
+			return
+		}
+
+		if int(version) != state.TokenVersion {
+			abortUnauthorized(c, response.InvalidToken)
 			return
 		}
 
 		c.Set(domain.JWTID, idAsUUID)
-		c.Set(domain.CallerRole, role)
+		c.Set(domain.CallerRole, state.Role)
 	}
 }
 

@@ -11,13 +11,16 @@ import (
 type Repository interface {
 	CreateUser(ctx context.Context, id, email, password string) error
 	FindUserByEmail(ctx context.Context, email string) (domain.UserRow, error)
-	GetUserRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
+	GetAuthState(ctx context.Context, id uuid.UUID) (domain.AuthState, error)
+	BumpTokenVersion(ctx context.Context, id uuid.UUID) error
 }
 
 type UseCases interface {
 	CreateUser(ctx context.Context, email, password string) (uuid.UUID, error)
 	LoginUser(ctx context.Context, email, password string) (domain.TokenPair, uuid.UUID, error)
-	GetCurrentRole(ctx context.Context, id uuid.UUID) (domain.Role, error)
+	RefreshToken(ctx context.Context, refreshToken string) (domain.TokenPair, error)
+	Logout(ctx context.Context, userID uuid.UUID) error
+	GetAuthState(ctx context.Context, id uuid.UUID) (domain.AuthState, error)
 }
 
 type authUseCases struct {
