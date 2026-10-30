@@ -1,9 +1,12 @@
 package roles
 
-import "TaskFlow/internal/domain"
+import (
+	"TaskFlow/internal/domain"
+	"context"
+)
 
-func (uc *rolesUseCases) GetAllUsersRoles() (domain.GetUserRolesResponse, error) {
-	roles, err := uc.repo.GetAllUsersRoles()
+func (uc *rolesUseCases) GetAllUsersRoles(ctx context.Context) (domain.GetUserRolesResponse, error) {
+	roles, err := uc.repo.GetAllUsersRoles(ctx)
 	if err != nil {
 		return domain.GetUserRolesResponse{}, err
 	}

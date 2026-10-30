@@ -48,7 +48,7 @@ func CreateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		task, err := uc.CreateTask(authorID, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
+		task, err := uc.CreateTask(c.Request.Context(), authorID, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			logger.Error("create task", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, response.ErrorResponse{

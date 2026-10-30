@@ -2,13 +2,14 @@ package tasks
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 )
 
-func (r *tasksRepository) DeleteTask(id, authorID uuid.UUID) error {
-	res, err := r.db.Exec("DELETE FROM tasks WHERE id = $1 AND author_id = $2", id, authorID)
+func (r *tasksRepository) DeleteTask(ctx context.Context, id, authorID uuid.UUID) error {
+	res, err := r.db.ExecContext(ctx, "DELETE FROM tasks WHERE id = $1 AND author_id = $2", id, authorID)
 	if err != nil {
 		return fmt.Errorf("delete task %s: %w", id, err)
 	}

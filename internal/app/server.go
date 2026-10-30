@@ -2,6 +2,7 @@ package app
 
 import (
 	"TaskFlow/internal/config"
+	"TaskFlow/internal/handlers"
 	"TaskFlow/internal/handlers/auth"
 	"TaskFlow/internal/handlers/comments"
 	"TaskFlow/internal/handlers/middleware"
@@ -61,11 +62,13 @@ func NewServer(
 	}
 
 	authMiddleware := middleware.JWTAuthMiddleware(cfg, authUc, logger)
-	auth.SetupRoutes(router, authUc, logger)
-	profiles.SetupRoutes(router, authMiddleware, profilesUc, checker, logger)
-	tasks.SetupRoutes(router, authMiddleware, tasksUc, checker, logger)
-	comments.SetupRoutes(router, authMiddleware, commentsUC, checker, logger)
-	roles.SetupRoutes(router, authMiddleware, rolesUc, checker, logger)
+	unprotectedRateLimiter := middleware.RateLimiter(handlers.UnprotectedRateLimit, handlers.UnprotectedRateBurst)
+	protectedRateLimiter := middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst)
+	auth.SetupRoutes(router, unprotectedRateLimiter, authUc, logger)
+	profiles.SetupRoutes(router, authMiddleware, protectedRateLimiter, profilesUc, checker, logger)
+	tasks.SetupRoutes(router, authMiddleware, protectedRateLimiter, tasksUc, checker, logger)
+	comments.SetupRoutes(router, authMiddleware, protectedRateLimiter, commentsUC, checker, logger)
+	roles.SetupRoutes(router, authMiddleware, protectedRateLimiter, rolesUc, checker, logger)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

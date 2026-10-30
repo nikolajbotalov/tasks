@@ -52,7 +52,7 @@ func UpdateTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		err = uc.UpdateTask(id, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
+		err = uc.UpdateTask(c.Request.Context(), id, req.AssigneeID, req.Name, req.Description, req.Status, req.Priority)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
 				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})

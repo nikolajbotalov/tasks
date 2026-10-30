@@ -33,7 +33,7 @@ func GetByID(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		task, err := uc.GetTaskByID(id)
+		task, err := uc.GetTaskByID(c.Request.Context(), id)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
 				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"fmt"
 	"time"
 
@@ -9,11 +10,12 @@ import (
 )
 
 func (r *tasksRepository) UpdateTask(
+	ctx context.Context,
 	id uuid.UUID,
 	assigneeID *uuid.UUID,
 	name, description, status, priority *string,
 ) error {
-	res, err := r.db.Exec(
+	res, err := r.db.ExecContext(ctx,
 		`UPDATE tasks 
 				SET name = COALESCE($1, name), 
 				    description = COALESCE($2, description),

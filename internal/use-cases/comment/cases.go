@@ -2,18 +2,19 @@ package comment
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 
 	"github.com/google/uuid"
 )
 
 type Repository interface {
-	GetCommentList(taskID uuid.UUID, page, limit int) ([]domain.TaskComment, int, error)
-	CreateComment(ID, taskID, authorID uuid.UUID, text string) (domain.TaskComment, error)
+	GetCommentList(ctx context.Context, taskID uuid.UUID, page, limit int) ([]domain.TaskComment, int, error)
+	CreateComment(ctx context.Context, ID, taskID, authorID uuid.UUID, text string) (domain.TaskComment, error)
 }
 
 type UseCases interface {
-	GetCommentList(taskID uuid.UUID, page, limit int) (domain.GetTaskCommentsResponse, error)
-	CreateComment(taskID, authorID uuid.UUID, text string) (domain.TaskComment, error)
+	GetCommentList(ctx context.Context, taskID uuid.UUID, page, limit int) (domain.GetTaskCommentsResponse, error)
+	CreateComment(ctx context.Context, taskID, authorID uuid.UUID, text string) (domain.TaskComment, error)
 }
 
 type commentUseCases struct {

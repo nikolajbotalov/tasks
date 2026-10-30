@@ -14,13 +14,9 @@ import (
 	profilesUC "TaskFlow/internal/use-cases/profiles"
 	rolesUC "TaskFlow/internal/use-cases/roles"
 	tasksUC "TaskFlow/internal/use-cases/tasks"
-	"TaskFlow/migrations"
-	"context"
 	"database/sql"
-	"fmt"
 	"log/slog"
 	"os"
-	"time"
 )
 
 type App struct {
@@ -39,25 +35,9 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		cfg.Database.DBHost, cfg.Database.DBPort, cfg.Database.DBName, cfg.Database.DBUser, cfg.Database.DBPassword, cfg.Database.DBSSLMode)
-	db, err := sql.Open("postgres", dsn)
+	db, err := postgres.ConnectDB(cfg)
 	if err != nil {
-		logger.Error("connect db", slog.String("error", err.Error()))
-		return nil, err
-	}
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(2)
-	db.SetConnMaxLifetime(time.Minute)
-
-	err = db.Ping()
-	if err != nil {
-		logger.Error("ping db", slog.String("error", err.Error()))
-		return nil, err
-	}
-
-	if err = postgres.RunMigrations(context.Background(), db, migrations.FS); err != nil {
-		logger.Error("migrate db", slog.String("error", err.Error()))
+		logger.Error("connect database", slog.String("error", err.Error()))
 		return nil, err
 	}
 

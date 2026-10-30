@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"TaskFlow/internal/delivery/response"
+	"math"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -49,7 +51,6 @@ func RateLimiter(limit rate.Limit, burst int) gin.HandlerFunc {
 		removeStale(now)
 
 		cl, exists := clients[ip]
-
 		if !exists {
 			cl = &client{limiter: rate.NewLimiter(limit, burst)}
 			clients[ip] = cl
@@ -57,9 +58,26 @@ func RateLimiter(limit rate.Limit, burst int) gin.HandlerFunc {
 		cl.lastSeen = now
 		mu.Unlock()
 
-		if !cl.limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": response.RateLimitExceeded})
+		reservation := cl.limiter.Reserve()
+		delay := reservation.Delay()
+		if delay == 0 {
 			return
 		}
+
+		reservation.Cancel()
+
+		c.Header("Retry-After", retryAfterHeader(delay))
+		c.AbortWithStatusJSON(http.StatusTooManyRequests, response.ErrorResponse{
+			Error: response.RateLimitExceeded,
+		})
 	}
+}
+
+func retryAfterHeader(delay time.Duration) string {
+	seconds := int(math.Ceil(delay.Seconds()))
+	if seconds < 1 {
+		seconds = 1
+	}
+
+	return strconv.Itoa(seconds)
 }

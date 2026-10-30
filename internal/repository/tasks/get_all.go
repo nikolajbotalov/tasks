@@ -2,12 +2,14 @@ package tasks
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 )
 
 func (r *tasksRepository) GetTaskList(
+	ctx context.Context,
 	authorID uuid.UUID,
 	assigneeID *uuid.UUID,
 	status domain.TaskStatus,
@@ -16,7 +18,7 @@ func (r *tasksRepository) GetTaskList(
 	page, limit int,
 ) ([]domain.Task, int, error) {
 	escapedSearch := escapeLike(search)
-	rows, err := r.db.Query(`
+	rows, err := r.db.QueryContext(ctx, `
 		SELECT id, name, description, created_at, updated_at, author_id, assignee_id, status, priority 
 		FROM tasks
 		WHERE author_id = $1 
@@ -51,7 +53,7 @@ func (r *tasksRepository) GetTaskList(
 
 	var totalCount int
 
-	err = r.db.QueryRow(`
+	err = r.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) FROM tasks
 		WHERE author_id = $1
 		  AND ($2::uuid IS NULL OR assignee_id = $2::uuid) 

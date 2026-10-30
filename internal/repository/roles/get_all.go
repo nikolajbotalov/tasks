@@ -2,13 +2,14 @@ package roles
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"fmt"
 )
 
-func (r *Repository) GetAllUsersRoles() ([]domain.Role, error) {
+func (r *Repository) GetAllUsersRoles(ctx context.Context) ([]domain.Role, error) {
 	roles := make([]domain.Role, 0)
 
-	rows, err := r.db.Query("SELECT name FROM roles ORDER BY name")
+	rows, err := r.db.QueryContext(ctx, "SELECT name FROM roles ORDER BY name")
 	if err != nil {
 		return []domain.Role{}, fmt.Errorf("get all user roles: %w", err)
 	}
