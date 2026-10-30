@@ -38,7 +38,7 @@ func DeleteTask(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		err = uc.DeleteTask(id, authorID)
+		err = uc.DeleteTask(c.Request.Context(), id, authorID)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
 				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})

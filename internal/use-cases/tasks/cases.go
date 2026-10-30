@@ -2,12 +2,14 @@ package tasks
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 
 	"github.com/google/uuid"
 )
 
 type Repository interface {
 	GetTaskList(
+		ctx context.Context,
 		authorID uuid.UUID,
 		assigneeID *uuid.UUID,
 		status domain.TaskStatus,
@@ -15,14 +17,15 @@ type Repository interface {
 		search string,
 		page, limit int,
 	) ([]domain.Task, int, error)
-	GetTaskByID(id uuid.UUID) (domain.Task, error)
-	CreateTask(id, authorID, assigneeID uuid.UUID, name, description, priority string, status *string) (domain.Task, error)
-	UpdateTask(id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
-	DeleteTask(id, authorID uuid.UUID) error
+	GetTaskByID(ctx context.Context, id uuid.UUID) (domain.Task, error)
+	CreateTask(ctx context.Context, id, authorID, assigneeID uuid.UUID, name, description, priority string, status *string) (domain.Task, error)
+	UpdateTask(ctx context.Context, id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
+	DeleteTask(ctx context.Context, id, authorID uuid.UUID) error
 }
 
 type UseCases interface {
 	GetAllTasks(
+		ctx context.Context,
 		authorID uuid.UUID,
 		assigneeID *uuid.UUID,
 		status domain.TaskStatus,
@@ -30,10 +33,10 @@ type UseCases interface {
 		search string,
 		page, limit int,
 	) (domain.GetAllTasksResponse, error)
-	GetTaskByID(id uuid.UUID) (domain.Task, error)
-	CreateTask(authorID, assigneeID uuid.UUID, name, description, status, priority string) (domain.Task, error)
-	UpdateTask(id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
-	DeleteTask(id, authorID uuid.UUID) error
+	GetTaskByID(ctx context.Context, id uuid.UUID) (domain.Task, error)
+	CreateTask(ctx context.Context, authorID, assigneeID uuid.UUID, name, description, status, priority string) (domain.Task, error)
+	UpdateTask(ctx context.Context, id uuid.UUID, assigneeID *uuid.UUID, name, description, status, priority *string) error
+	DeleteTask(ctx context.Context, id, authorID uuid.UUID) error
 }
 
 type tasksUseCases struct {

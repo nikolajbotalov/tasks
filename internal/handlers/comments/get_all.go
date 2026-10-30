@@ -46,7 +46,7 @@ func GetAllTaskComments(uc commentsUC.UseCases, logger *slog.Logger) gin.Handler
 			return
 		}
 
-		commentsRes, err := uc.GetCommentList(taskID, page, limit)
+		commentsRes, err := uc.GetCommentList(c.Request.Context(), taskID, page, limit)
 		if err != nil {
 			logger.Error("get comment list", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, response.ErrorResponse{

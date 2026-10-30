@@ -22,7 +22,7 @@ import (
 // @Router /users/roles [get]
 func GetAllUsersRoles(uc rolesUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roles, err := uc.GetAllUsersRoles()
+		roles, err := uc.GetAllUsersRoles(c.Request.Context())
 		if err != nil {
 			logger.Error("get user roles", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, response.ErrorResponse{

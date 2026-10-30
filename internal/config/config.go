@@ -28,12 +28,14 @@ type JWT struct {
 }
 
 type Database struct {
-	DBHost     string `env:"DB_HOST" env-default:"localhost"`
-	DBPort     string `env:"DB_PORT" env-default:"5432"`
-	DBName     string `env:"DB_NAME" env-default:"taskflow"`
-	DBUser     string `env:"DB_USER" env-default:"postgres"`
-	DBPassword string `env:"DB_PASSWORD" env-required:"true"`
-	DBSSLMode  string `env:"DB_SSL_MODE" env-default:"disable"`
+	DBHost         string `env:"DB_HOST" env-default:"localhost"`
+	DBPort         string `env:"DB_PORT" env-default:"5432"`
+	DBName         string `env:"DB_NAME" env-default:"taskflow"`
+	DBUser         string `env:"DB_USER" env-default:"postgres"`
+	DBPassword     string `env:"DB_PASSWORD" env-required:"true"`
+	DBSSLMode      string `env:"DB_SSL_MODE" env-default:"disable"`
+	DBMaxOpenConns int    `env:"DB_MAX_OPEN_CONNS" env-default:"25"`
+	DBMaxIdleConns int    `env:"DB_MAX_IDLE_CONNS" env-default:"2"`
 }
 
 type CORS struct {

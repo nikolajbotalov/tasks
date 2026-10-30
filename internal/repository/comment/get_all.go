@@ -2,13 +2,18 @@ package comment
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 )
 
-func (r *commentRepository) GetCommentList(taskID uuid.UUID, page, limit int) ([]domain.TaskComment, int, error) {
-	rows, err := r.db.Query(
+func (r *commentRepository) GetCommentList(
+	ctx context.Context,
+	taskID uuid.UUID,
+	page, limit int,
+) ([]domain.TaskComment, int, error) {
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT c.id, c.task_id, c.author_id, COALESCE(p.username, '') AS author_name, c.text, c.created_at
 				FROM task_comments c 
 				LEFT JOIN profiles p ON p.user_id = c.author_id
@@ -35,7 +40,7 @@ func (r *commentRepository) GetCommentList(taskID uuid.UUID, page, limit int) ([
 	}
 
 	var total int
-	err = r.db.QueryRow("SELECT COUNT(*) FROM task_comments WHERE task_id = $1", taskID).Scan(&total)
+	err = r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM task_comments WHERE task_id = $1", taskID).Scan(&total)
 	if err != nil {
 		return []domain.TaskComment{}, 0, fmt.Errorf("count comments for task %s: %w", taskID, err)
 	}

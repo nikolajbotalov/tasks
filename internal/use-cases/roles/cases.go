@@ -8,12 +8,12 @@ import (
 )
 
 type roleRepository interface {
-	GetAllUsersRoles() ([]domain.Role, error)
+	GetAllUsersRoles(ctx context.Context) ([]domain.Role, error)
 	UpdateUserRole(ctx context.Context, userID uuid.UUID, role domain.Role) error
 }
 
 type UseCases interface {
-	GetAllUsersRoles() (domain.GetUserRolesResponse, error)
+	GetAllUsersRoles(ctx context.Context) (domain.GetUserRolesResponse, error)
 	UpdateUserRole(ctx context.Context, targetID, curUserID uuid.UUID, role string) error
 }
 

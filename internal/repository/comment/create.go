@@ -2,6 +2,7 @@ package comment
 
 import (
 	"TaskFlow/internal/domain"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,10 +11,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *commentRepository) CreateComment(ID, taskID, authorID uuid.UUID, text string) (domain.TaskComment, error) {
+func (r *commentRepository) CreateComment(
+	ctx context.Context,
+	ID, taskID, authorID uuid.UUID,
+	text string,
+) (domain.TaskComment, error) {
 	var comment domain.TaskComment
 
-	err := r.db.QueryRow(`
+	err := r.db.QueryRowContext(ctx, `
 					WITH inserted AS (
 					    INSERT INTO task_comments (id, task_id, author_id, text, created_at)
 					    SELECT $1, $2, $3, $4, $5

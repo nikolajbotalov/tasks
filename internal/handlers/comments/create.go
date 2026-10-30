@@ -52,7 +52,7 @@ func CreateTaskComment(uc commentsUC.UseCases, logger *slog.Logger) gin.HandlerF
 			return
 		}
 
-		taskComment, err := uc.CreateComment(taskID, authorID, req.Text)
+		taskComment, err := uc.CreateComment(c.Request.Context(), taskID, authorID, req.Text)
 		if err != nil {
 			if errors.Is(err, domain.ErrTaskNotFound) {
 				c.JSON(http.StatusNotFound, response.ErrorResponse{Error: response.TaskNotFound})

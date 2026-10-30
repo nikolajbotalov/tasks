@@ -77,7 +77,7 @@ func GetAll(uc tasksUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
-		tasks, err := uc.GetAllTasks(authorID, assigneeID, taskStatus, taskPriority, trimmedSearch, page, limit)
+		tasks, err := uc.GetAllTasks(c.Request.Context(), authorID, assigneeID, taskStatus, taskPriority, trimmedSearch, page, limit)
 		if err != nil {
 			logger.Error("get task list", slog.String("error", err.Error()))
 			c.JSON(http.StatusInternalServerError, response.ErrorResponse{
