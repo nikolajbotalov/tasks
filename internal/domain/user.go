@@ -5,8 +5,9 @@ import (
 )
 
 type UserRow struct {
-	ID       uuid.UUID
-	Password string
+	ID           uuid.UUID
+	Password     string
+	TokenVersion int
 }
 
 type LoginUserResponse struct {

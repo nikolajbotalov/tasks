@@ -31,7 +31,7 @@ func (uc *authUseCases) LoginUser(ctx context.Context, email, password string) (
 		return domain.TokenPair{}, uuid.Nil, fmt.Errorf("compare password: %w", err)
 	}
 
-	tokens, err := uc.generateTokenPair(user.ID)
+	tokens, err := uc.generateTokenPair(user.ID, user.TokenVersion)
 	if err != nil {
 		return domain.TokenPair{}, uuid.Nil, fmt.Errorf("generate token pair: %w", err)
 	}

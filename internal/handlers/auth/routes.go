@@ -7,11 +7,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(g *gin.Engine, rateLimiter gin.HandlerFunc, uc authUC.UseCases, logger *slog.Logger) {
+func SetupRoutes(
+	g *gin.Engine,
+	rateLimiter gin.HandlerFunc,
+	authMiddleware gin.HandlerFunc,
+	uc authUC.UseCases,
+	logger *slog.Logger,
+) {
 	authRouters := g.Group("/api/v1/auth")
 	authRouters.Use(rateLimiter)
 	{
 		authRouters.POST("/register", RegisterUser(uc, logger))
 		authRouters.POST("/login", LoginUser(uc, logger))
+		authRouters.POST("/refresh", RefreshToken(uc, logger))
+		authRouters.POST("/logout", authMiddleware, Logout(uc, logger))
 	}
 }
