@@ -11,7 +11,6 @@ type UserRow struct {
 }
 
 type LoginUserResponse struct {
-	ID           uuid.UUID `json:"id"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
+	ID          uuid.UUID `json:"id"`
+	AccessToken string    `json:"access_token"`
 }

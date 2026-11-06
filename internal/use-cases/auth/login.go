@@ -31,9 +31,13 @@ func (uc *authUseCases) LoginUser(ctx context.Context, email, password string) (
 		return domain.TokenPair{}, uuid.Nil, fmt.Errorf("compare password: %w", err)
 	}
 
-	tokens, err := uc.generateTokenPair(user.ID, user.TokenVersion)
+	tokens, session, err := uc.generateTokenPair(user.ID, user.TokenVersion)
 	if err != nil {
 		return domain.TokenPair{}, uuid.Nil, fmt.Errorf("generate token pair: %w", err)
+	}
+
+	if err = uc.repo.CreateRefreshSession(ctx, session); err != nil {
+		return domain.TokenPair{}, uuid.Nil, fmt.Errorf("create refresh session for user %s: %w", user.ID, err)
 	}
 
 	return tokens, user.ID, nil

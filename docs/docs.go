@@ -43,6 +43,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/domain.LoginUserResponse"
+                        },
+                        "headers": {
+                            "Set-Cookie": {
+                                "type": "string",
+                                "description": "HttpOnly refresh cookie"
+                            }
                         }
                     },
                     "400": {
@@ -80,11 +86,7 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
+                "description": "Revokes the refresh sessions and clears the refresh cookie",
                 "produces": [
                     "application/json"
                 ],
@@ -97,18 +99,6 @@ const docTemplate = `{
                         "description": "logged out",
                         "schema": {
                             "$ref": "#/definitions/response.MessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "user not found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "429": {
@@ -140,10 +130,9 @@ const docTemplate = `{
                 "summary": "Update user tokens",
                 "parameters": [
                     {
-                        "description": "request body",
+                        "description": "optional when refresh cookie is used",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/auth.refreshRequest"
                         }
@@ -153,17 +142,17 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.TokenPair"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid request body",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
+                            "$ref": "#/definitions/domain.RefreshResponse"
                         }
                     },
                     "401": {
                         "description": "invalid or expired refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "refresh already in progress",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -1068,9 +1057,6 @@ const docTemplate = `{
         },
         "auth.refreshRequest": {
             "type": "object",
-            "required": [
-                "refresh_token"
-            ],
             "properties": {
                 "refresh_token": {
                     "type": "string"
@@ -1173,9 +1159,6 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
                 }
             }
         },
@@ -1198,6 +1181,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.RefreshResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
                     "type": "string"
                 }
             }
@@ -1274,17 +1265,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "text": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.TokenPair": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
                     "type": "string"
                 }
             }

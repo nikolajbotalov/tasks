@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"TaskFlow/internal/config"
 	"TaskFlow/internal/delivery/response"
 	"TaskFlow/internal/domain"
 	"TaskFlow/internal/handlers/validation"
@@ -24,13 +25,14 @@ type loginUserRequest struct {
 // @Produce json
 // @Param request body loginUserRequest true "user request body"
 // @Success 200 {object} domain.LoginUserResponse
+// @Header 200 {string} Set-Cookie "HttpOnly refresh cookie"
 // @Failure 400 {object} response.ErrorResponse "invalid request body"
 // @Failure 401 {object} response.ErrorResponse "invalid login or password"
 // @Failure 422 {object} response.ValidationErrorResponse "validation error"
 // @Failure 429 {object} response.ErrorResponse "rate limit exceeded"
 // @Failure 500 {object} response.ErrorResponse "internal server error"
 // @Router /auth/login [post]
-func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
+func LoginUser(uc authUC.UseCases, logger *slog.Logger, cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var loginRequest loginUserRequest
 		if err := c.ShouldBindJSON(&loginRequest); err != nil {
@@ -52,10 +54,11 @@ func LoginUser(uc authUC.UseCases, logger *slog.Logger) gin.HandlerFunc {
 			return
 		}
 
+		setRefreshCookie(c, cfg, tokens.RefreshToken, tokens.RefreshExpiresAt)
+
 		c.JSON(http.StatusOK, domain.LoginUserResponse{
-			ID:           userID,
-			AccessToken:  tokens.AccessToken,
-			RefreshToken: tokens.RefreshToken,
+			ID:          userID,
+			AccessToken: tokens.AccessToken,
 		})
 	}
 }

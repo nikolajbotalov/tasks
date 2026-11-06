@@ -6,6 +6,8 @@ const (
 	JWTType             = "typ"
 	JWTTypeAccess       = "access"
 	JWTTypeRefresh      = "refresh"
+	JWTJTI              = "jti"
+	JWTFAM              = "fam"
 	CallerRole          = "caller_role"
 	TaskAssigneeIDParam = "assignee_id"
 	TaskStatusParam     = "status"
