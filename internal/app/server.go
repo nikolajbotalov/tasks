@@ -50,10 +50,11 @@ func NewServer(
 	router.Use(gin.Recovery())
 	router.Use(SlogMiddleware(logger))
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: splitAndTrimCORS(cfg.CORS.AllowedOrigins),
-		AllowMethods: splitAndTrimCORS(cfg.CORS.AllowedMethods),
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
-		MaxAge:       12 * time.Hour,
+		AllowOrigins:     splitAndTrimCORS(cfg.CORS.AllowedOrigins),
+		AllowMethods:     splitAndTrimCORS(cfg.CORS.AllowedMethods),
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		MaxAge:           12 * time.Hour,
+		AllowCredentials: true,
 	}))
 
 	err := router.SetTrustedProxies(nil)
@@ -62,9 +63,11 @@ func NewServer(
 	}
 
 	authMiddleware := middleware.JWTAuthMiddleware(cfg, authUc, logger)
-	unprotectedRateLimiter := middleware.RateLimiter(handlers.UnprotectedRateLimit, handlers.UnprotectedRateBurst)
+	strictLimiter := middleware.RateLimiter(handlers.UnprotectedRateLimit, handlers.UnprotectedRateBurst)
+	refreshLimiter := middleware.RateLimiter(handlers.RefreshRateLimit, handlers.RefreshRateBurst)
 	protectedRateLimiter := middleware.RateLimiter(handlers.ProtectedRateLimit, handlers.ProtectedRateBurst)
-	auth.SetupRoutes(router, unprotectedRateLimiter, authMiddleware, authUc, logger)
+
+	auth.SetupRoutes(router, cfg, strictLimiter, refreshLimiter, authUc, logger)
 	profiles.SetupRoutes(router, authMiddleware, protectedRateLimiter, profilesUc, checker, logger)
 	tasks.SetupRoutes(router, authMiddleware, protectedRateLimiter, tasksUc, checker, logger)
 	comments.SetupRoutes(router, authMiddleware, protectedRateLimiter, commentsUC, checker, logger)

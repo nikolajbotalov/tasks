@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ type Config struct {
 	JWT      JWT
 	Database Database
 	CORS     CORS
+	Cookie   Cookie
 }
 
 type Listen struct {
@@ -24,8 +26,15 @@ type Listen struct {
 
 type JWT struct {
 	Secret          string        `env:"JWT_SECRET" env-required:"true"`
-	AccessTokenTTL  time.Duration `env:"JWT_ACCESS_TTL" env-default:"24h"`
-	RefreshTokenTTL time.Duration `env:"JWT_REFRESH_TTL" env-default:"720h"`
+	AccessTokenTTL  time.Duration `env:"JWT_ACCESS_TTL" env-default:"15m"`
+	RefreshTokenTTL time.Duration `env:"JWT_REFRESH_TTL" env-default:"168h"`
+}
+
+type Cookie struct {
+	Secure   bool   `env:"COOKIE_SECURE" env-default:"false"`
+	SameSite string `env:"COOKIE_SAME_SITE" env-default:"lax"`
+	Domain   string `env:"COOKIE_DOMAIN"`
+	Path     string `env:"COOKIE_PATH" env-default:"/api/v1/auth"`
 }
 
 type Database struct {
@@ -70,6 +79,12 @@ func LoadConfig() (*Config, error) {
 		if instance.JWT.Secret == "" {
 			errs = append(errs, errors.New("JWT_SECRET is empty"))
 		}
+		if instance.JWT.AccessTokenTTL <= 0 {
+			errs = append(errs, errors.New("JWT_ACCESS_TTL must be positive"))
+		}
+		if instance.JWT.RefreshTokenTTL <= 0 {
+			errs = append(errs, errors.New("JWT_REFRESH_TTL must be positive"))
+		}
 		if instance.Database.DBPassword == "" {
 			errs = append(errs, errors.New("DB_PASSWORD is empty"))
 		}
@@ -79,6 +94,27 @@ func LoadConfig() (*Config, error) {
 		if instance.CORS.AllowedMethods == "" {
 			errs = append(errs, errors.New("CORS_ALLOWED_METHODS is empty"))
 		}
+
+		sameSite := strings.ToLower(strings.TrimSpace(instance.Cookie.SameSite))
+		switch sameSite {
+		case "lax", "strict", "none":
+		default:
+			errs = append(errs, errors.New("COOKIE_SAME_SITE must be lax, strict or none"))
+		}
+
+		if sameSite == "none" && !instance.Cookie.Secure {
+			errs = append(errs, errors.New("COOKIE_SECURE must be true, when COOKIE_SAME_SITE is none"))
+		}
+		if !strings.HasPrefix(instance.Cookie.Path, "/") {
+			errs = append(errs, errors.New("COOKIE_PATH must start with /"))
+		}
+
+		for _, origin := range strings.Split(instance.CORS.AllowedOrigins, ",") {
+			if strings.TrimSpace(origin) == "*" {
+				errs = append(errs, errors.New("CORS_ALLOWED_ORIGINS must not contain * when credentials are enabled"))
+			}
+		}
+
 		initErr = errors.Join(errs...)
 	})
 

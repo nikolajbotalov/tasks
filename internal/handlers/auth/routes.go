@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"TaskFlow/internal/config"
+	"TaskFlow/internal/handlers/middleware"
 	authUC "TaskFlow/internal/use-cases/auth"
 	"log/slog"
 
@@ -9,17 +11,18 @@ import (
 
 func SetupRoutes(
 	g *gin.Engine,
-	rateLimiter gin.HandlerFunc,
-	authMiddleware gin.HandlerFunc,
+	cfg *config.Config,
+	strictLimiter gin.HandlerFunc,
+	refreshLimiter gin.HandlerFunc,
 	uc authUC.UseCases,
 	logger *slog.Logger,
 ) {
 	authRouters := g.Group("/api/v1/auth")
-	authRouters.Use(rateLimiter)
+	authRouters.Use(middleware.RequireTrustedOrigin(cfg.CORS.AllowedOrigins))
 	{
-		authRouters.POST("/register", RegisterUser(uc, logger))
-		authRouters.POST("/login", LoginUser(uc, logger))
-		authRouters.POST("/refresh", RefreshToken(uc, logger))
-		authRouters.POST("/logout", authMiddleware, Logout(uc, logger))
+		authRouters.POST("/register", strictLimiter, RegisterUser(uc, logger))
+		authRouters.POST("/login", strictLimiter, LoginUser(uc, logger, cfg))
+		authRouters.POST("/refresh", refreshLimiter, RefreshToken(uc, logger, cfg))
+		authRouters.POST("/logout", refreshLimiter, Logout(uc, logger, cfg))
 	}
 }

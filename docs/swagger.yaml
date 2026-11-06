@@ -15,8 +15,6 @@ definitions:
     properties:
       refresh_token:
         type: string
-    required:
-    - refresh_token
     type: object
   auth.registerUserRequest:
     properties:
@@ -82,8 +80,6 @@ definitions:
         type: string
       id:
         type: string
-      refresh_token:
-        type: string
     type: object
   domain.Profile:
     properties:
@@ -98,6 +94,11 @@ definitions:
       user_id:
         type: string
       username:
+        type: string
+    type: object
+  domain.RefreshResponse:
+    properties:
+      access_token:
         type: string
     type: object
   domain.RegisterResponse:
@@ -149,13 +150,6 @@ definitions:
       task_id:
         type: string
       text:
-        type: string
-    type: object
-  domain.TokenPair:
-    properties:
-      access_token:
-        type: string
-      refresh_token:
         type: string
     type: object
   profiles.updateProfileRequest:
@@ -287,6 +281,10 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            Set-Cookie:
+              description: HttpOnly refresh cookie
+              type: string
           schema:
             $ref: '#/definitions/domain.LoginUserResponse'
         "400":
@@ -314,6 +312,7 @@ paths:
       - Auth
   /auth/logout:
     post:
+      description: Revokes the refresh sessions and clears the refresh cookie
       produces:
       - application/json
       responses:
@@ -321,14 +320,6 @@ paths:
           description: logged out
           schema:
             $ref: '#/definitions/response.MessageResponse'
-        "401":
-          description: unauthorized
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
-        "404":
-          description: user not found
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
         "429":
           description: rate limit exceeded
           schema:
@@ -337,8 +328,6 @@ paths:
           description: internal server error
           schema:
             $ref: '#/definitions/response.ErrorResponse'
-      security:
-      - BearerAuth: []
       summary: Logout current user
       tags:
       - Auth
@@ -347,10 +336,9 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: request body
+      - description: optional when refresh cookie is used
         in: body
         name: request
-        required: true
         schema:
           $ref: '#/definitions/auth.refreshRequest'
       produces:
@@ -359,13 +347,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.TokenPair'
-        "400":
-          description: invalid request body
-          schema:
-            $ref: '#/definitions/response.ErrorResponse'
+            $ref: '#/definitions/domain.RefreshResponse'
         "401":
           description: invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: refresh already in progress
           schema:
             $ref: '#/definitions/response.ErrorResponse'
         "429":

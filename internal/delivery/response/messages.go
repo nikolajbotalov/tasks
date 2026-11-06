@@ -33,6 +33,7 @@ const (
 	LastAdminDemotingForbidden    = "cannot demote the last admin"
 	InvalidRefreshToken           = "invalid refresh token"
 	LoggedOut                     = "logged out"
+	RefreshInProgress             = "refresh already in progress"
 )
 
 type MessageResponse struct {
