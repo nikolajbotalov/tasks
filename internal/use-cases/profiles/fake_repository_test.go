@@ -8,22 +8,27 @@ import (
 )
 
 type fakeRepository struct {
+	getErr    error
 	updateErr error
 
 	getCalls    int
 	updateCalls int
 
+	gotGetUserID uuid.UUID
 	gotUsername  *string
 	gotFirstName *string
 	gotLastName  *string
 	gotUserID    uuid.UUID
+
+	profile domain.Profile
 }
 
 var _ Repository = (*fakeRepository)(nil)
 
 func (f *fakeRepository) GetProfileByUserID(ctx context.Context, userID uuid.UUID) (domain.Profile, error) {
 	f.getCalls++
-	return domain.Profile{}, nil
+	f.gotGetUserID = userID
+	return f.profile, f.getErr
 }
 
 func (f *fakeRepository) UpdateProfile(
