@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"TaskFlow/internal/domain"
+	"TaskFlow/internal/testutils"
 	"errors"
 	"testing"
 )
@@ -63,7 +64,7 @@ func TestGetProfileByUserID(t *testing.T) {
 				t.Errorf("profile.UserID = %s, want %s", got.UserID, tt.repoProfile.UserID)
 			}
 
-			assertOptionalString(t, "username", got.Username, tt.repoProfile.Username)
+			testutils.AssertOptionalString(t, "username", got.Username, tt.repoProfile.Username)
 		})
 	}
 }

@@ -2,6 +2,7 @@ package profiles
 
 import (
 	"TaskFlow/internal/domain"
+	"TaskFlow/internal/testutils"
 	"errors"
 	"strings"
 	"testing"
@@ -108,25 +109,10 @@ func TestUpdateProfile(t *testing.T) {
 				t.Errorf("userID = %s, want %s", repo.gotUserID, profileUserID)
 			}
 
-			assertOptionalString(t, "username", repo.gotUsername, tt.wantUserName)
-			assertOptionalString(t, "firstName", repo.gotFirstName, tt.wantFirstName)
-			assertOptionalString(t, "lastName", repo.gotLastName, tt.wantLastName)
+			testutils.AssertOptionalString(t, "username", repo.gotUsername, tt.wantUserName)
+			testutils.AssertOptionalString(t, "firstName", repo.gotFirstName, tt.wantFirstName)
+			testutils.AssertOptionalString(t, "lastName", repo.gotLastName, tt.wantLastName)
 		})
-	}
-}
-
-func assertOptionalString(t *testing.T, field string, got, want *string) {
-	t.Helper()
-
-	switch {
-	case got == nil && want == nil:
-		return
-	case got == nil:
-		t.Fatalf("%s = nil, want %q", field, *want)
-	case want == nil:
-		t.Fatalf("%s = %q, want nil", field, *got)
-	case *got != *want:
-		t.Errorf("%s = %q, want %q", field, *got, *want)
 	}
 }
 
