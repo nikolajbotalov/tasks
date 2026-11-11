@@ -8,9 +8,13 @@ import (
 )
 
 type fakeRepository struct {
-	createErr error
+	createErr  error
+	getListErr error
+	deleteErr  error
 
-	createCalls int
+	createCalls  int
+	getListCalls int
+	deleteCalls  int
 
 	gotID          uuid.UUID
 	gotAuthorID    uuid.UUID
@@ -19,6 +23,20 @@ type fakeRepository struct {
 	gotDescription string
 	gotPriority    string
 	gotStatus      *string
+
+	gotListAuthorID   uuid.UUID
+	gotListAssigneeID *uuid.UUID
+	gotListStatus     domain.TaskStatus
+	gotListPriority   domain.TaskPriority
+	gotListSearch     string
+	gotListPage       int
+	gotListLimit      int
+
+	taskList  []domain.Task
+	taskTotal int
+
+	gotDeleteID       uuid.UUID
+	gotDeleteAuthorID uuid.UUID
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -55,9 +73,29 @@ func (f *fakeRepository) CreateTask(
 }
 
 func (f *fakeRepository) GetTaskList(
-	context.Context, uuid.UUID, *uuid.UUID, domain.TaskStatus, domain.TaskPriority, string, int, int,
+	ctx context.Context,
+	authorID uuid.UUID,
+	assigneeID *uuid.UUID,
+	status domain.TaskStatus,
+	priority domain.TaskPriority,
+	search string,
+	page, limit int,
 ) ([]domain.Task, int, error) {
-	panic("unexpected call: GetTaskList")
+	f.getListCalls++
+
+	f.gotListAuthorID = authorID
+	f.gotListAssigneeID = assigneeID
+	f.gotListStatus = status
+	f.gotListPriority = priority
+	f.gotListSearch = search
+	f.gotListPage = page
+	f.gotListLimit = limit
+
+	if f.getListErr != nil {
+		return []domain.Task{}, 0, f.getListErr
+	}
+
+	return f.taskList, f.taskTotal, nil
 }
 
 func (f *fakeRepository) GetTaskByID(context.Context, uuid.UUID) (domain.Task, error) {
