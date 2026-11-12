@@ -10,11 +10,13 @@ import (
 type fakeRepository struct {
 	createErr  error
 	getListErr error
+	getByIDErr error
 	deleteErr  error
 	updateErr  error
 
 	createCalls  int
 	getListCalls int
+	getByIDCalls int
 	deleteCalls  int
 	updateCalls  int
 
@@ -46,6 +48,9 @@ type fakeRepository struct {
 	gotUpdateDescription *string
 	gotUpdateStatus      *string
 	gotUpdatePriority    *string
+
+	gotGetByID uuid.UUID
+	taskByID   domain.Task
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -107,8 +112,11 @@ func (f *fakeRepository) GetTaskList(
 	return f.taskList, f.taskTotal, nil
 }
 
-func (f *fakeRepository) GetTaskByID(context.Context, uuid.UUID) (domain.Task, error) {
-	panic("unexpected call: GetTaskByID")
+func (f *fakeRepository) GetTaskByID(cxt context.Context, id uuid.UUID) (domain.Task, error) {
+	f.getByIDCalls++
+	f.gotGetByID = id
+
+	return f.taskByID, f.getByIDErr
 }
 
 func (f *fakeRepository) UpdateTask(
