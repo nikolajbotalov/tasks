@@ -108,6 +108,11 @@ func (f *fakeRepository) UpdateTask(
 	panic("unexpected call: UpdateTask")
 }
 
-func (f *fakeRepository) DeleteTask(context.Context, uuid.UUID, uuid.UUID) error {
-	panic("unexpected call: DeleteTask")
+func (f *fakeRepository) DeleteTask(ctx context.Context, id, authorID uuid.UUID) error {
+	f.deleteCalls++
+
+	f.gotDeleteID = id
+	f.gotDeleteAuthorID = authorID
+
+	return f.deleteErr
 }
