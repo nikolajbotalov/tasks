@@ -11,10 +11,12 @@ type fakeRepository struct {
 	createErr  error
 	getListErr error
 	deleteErr  error
+	updateErr  error
 
 	createCalls  int
 	getListCalls int
 	deleteCalls  int
+	updateCalls  int
 
 	gotID          uuid.UUID
 	gotAuthorID    uuid.UUID
@@ -37,6 +39,13 @@ type fakeRepository struct {
 
 	gotDeleteID       uuid.UUID
 	gotDeleteAuthorID uuid.UUID
+
+	gotUpdateID          uuid.UUID
+	gotUpdateAssigneeID  *uuid.UUID
+	gotUpdateName        *string
+	gotUpdateDescription *string
+	gotUpdateStatus      *string
+	gotUpdatePriority    *string
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -103,9 +112,21 @@ func (f *fakeRepository) GetTaskByID(context.Context, uuid.UUID) (domain.Task, e
 }
 
 func (f *fakeRepository) UpdateTask(
-	context.Context, uuid.UUID, *uuid.UUID, *string, *string, *string, *string,
+	ctx context.Context,
+	id uuid.UUID,
+	assigneeID *uuid.UUID,
+	name, description, status, priority *string,
 ) error {
-	panic("unexpected call: UpdateTask")
+	f.updateCalls++
+
+	f.gotUpdateID = id
+	f.gotUpdateAssigneeID = assigneeID
+	f.gotUpdateName = name
+	f.gotUpdateDescription = description
+	f.gotUpdateStatus = status
+	f.gotUpdatePriority = priority
+
+	return f.updateErr
 }
 
 func (f *fakeRepository) DeleteTask(ctx context.Context, id, authorID uuid.UUID) error {
