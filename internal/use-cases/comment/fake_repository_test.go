@@ -8,14 +8,23 @@ import (
 )
 
 type fakeRepository struct {
-	createErr error
+	createErr  error
+	getListErr error
 
-	createCalls int
+	createCalls  int
+	getListCalls int
 
 	gotID       uuid.UUID
 	gotTaskID   uuid.UUID
 	gotAuthorID uuid.UUID
 	gotText     string
+
+	gotListTaskID uuid.UUID
+	gotListPage   int
+	gotListLimit  int
+
+	commentList  []domain.TaskComment
+	commentTotal int
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -46,7 +55,19 @@ func (f *fakeRepository) CreateComment(
 }
 
 func (f *fakeRepository) GetCommentList(
-	context.Context, uuid.UUID, int, int,
+	ctx context.Context,
+	taskID uuid.UUID,
+	page, limit int,
 ) ([]domain.TaskComment, int, error) {
-	panic("unexpected call: GetCommentList")
+	f.getListCalls++
+
+	f.gotListTaskID = taskID
+	f.gotListPage = page
+	f.gotListLimit = limit
+
+	if f.getListErr != nil {
+		return []domain.TaskComment{}, 0, f.getListErr
+	}
+
+	return f.commentList, f.commentTotal, nil
 }
