@@ -48,8 +48,12 @@ func (f *fakeRepository) CreateRefreshSession(context.Context, domain.RefreshSes
 	panic("unexpected call: CreateRefreshSession")
 }
 
-func (f *fakeRepository) GetRefreshSessionState(context.Context, uuid.UUID) (domain.RefreshSessionState, error) {
-	panic("unexpected call: GetRefreshSessionState")
+func (f *fakeRepository) GetRefreshSessionState(ctx context.Context, id uuid.UUID) (domain.RefreshSessionState, error) {
+	f.sessionCalls++
+
+	f.gotSessionID = id
+
+	return f.sessionState, f.sessionErr
 }
 
 func (f *fakeRepository) RotateRefreshSession(
@@ -62,6 +66,10 @@ func (f *fakeRepository) RevokeRefreshFamilyAndBumpVersion(context.Context, uuid
 	panic("unexpected call: RevokeRefreshFamilyAndBumpVersion")
 }
 
-func (f *fakeRepository) RevokeAllSessionsAndBumpVersion(context.Context, uuid.UUID) error {
-	panic("unexpected call: RevokeAllSessionsAndBumpVersion")
+func (f *fakeRepository) RevokeAllSessionsAndBumpVersion(ctx context.Context, userID uuid.UUID) error {
+	f.revokeCalls++
+
+	f.gotRevokeUser = userID
+
+	return f.revokeErr
 }
