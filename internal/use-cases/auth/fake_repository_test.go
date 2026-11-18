@@ -9,17 +9,21 @@ import (
 )
 
 type fakeRepository struct {
-	authErr         error
-	sessionErr      error
-	revokeErr       error
-	rotateErr       error
-	revokeFamilyErr error
+	authErr          error
+	sessionErr       error
+	revokeErr        error
+	rotateErr        error
+	revokeFamilyErr  error
+	findErr          error
+	createSessionErr error
 
-	authCalls         int
-	sessionCalls      int
-	revokeCalls       int
-	rotateCalls       int
-	revokeFamilyCalls int
+	authCalls          int
+	sessionCalls       int
+	revokeCalls        int
+	rotateCalls        int
+	revokeFamilyCalls  int
+	findCalls          int
+	createSessionCalls int
 
 	gotAuthID uuid.UUID
 	authState domain.AuthState
@@ -40,6 +44,11 @@ type fakeRepository struct {
 
 	gotRevokeFamilyUser uuid.UUID
 	gotRevokeFamilyID   uuid.UUID
+
+	userRow      domain.UserRow
+	gotFindEmail string
+
+	gotSession domain.RefreshSession
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -56,12 +65,20 @@ func (f *fakeRepository) CreateUser(context.Context, string, string, string) err
 	panic("unexpected call: CreateUser")
 }
 
-func (f *fakeRepository) FindUserByEmail(context.Context, string) (domain.UserRow, error) {
-	panic("unexpected call: FindUserByEmail")
+func (f *fakeRepository) FindUserByEmail(ctx context.Context, email string) (domain.UserRow, error) {
+	f.findCalls++
+
+	f.gotFindEmail = email
+
+	return f.userRow, f.findErr
 }
 
-func (f *fakeRepository) CreateRefreshSession(context.Context, domain.RefreshSession) error {
-	panic("unexpected call: CreateRefreshSession")
+func (f *fakeRepository) CreateRefreshSession(ctx context.Context, session domain.RefreshSession) error {
+	f.createSessionCalls++
+
+	f.gotSession = session
+
+	return f.createSessionErr
 }
 
 func (f *fakeRepository) GetRefreshSessionState(ctx context.Context, id uuid.UUID) (domain.RefreshSessionState, error) {
