@@ -16,6 +16,7 @@ type fakeRepository struct {
 	revokeFamilyErr  error
 	findErr          error
 	createSessionErr error
+	createUserErr    error
 
 	authCalls          int
 	sessionCalls       int
@@ -24,6 +25,7 @@ type fakeRepository struct {
 	revokeFamilyCalls  int
 	findCalls          int
 	createSessionCalls int
+	createUserCalls    int
 
 	gotAuthID uuid.UUID
 	authState domain.AuthState
@@ -49,6 +51,10 @@ type fakeRepository struct {
 	gotFindEmail string
 
 	gotSession domain.RefreshSession
+
+	gotCreateID       string
+	gotCreateEmail    string
+	gotCreatePassword string
 }
 
 var _ Repository = (*fakeRepository)(nil)
@@ -61,8 +67,17 @@ func (f *fakeRepository) GetAuthState(ctx context.Context, id uuid.UUID) (domain
 	return f.authState, f.authErr
 }
 
-func (f *fakeRepository) CreateUser(context.Context, string, string, string) error {
-	panic("unexpected call: CreateUser")
+func (f *fakeRepository) CreateUser(
+	ctx context.Context,
+	id, email, password string,
+) error {
+	f.createUserCalls++
+
+	f.gotCreateID = id
+	f.gotCreateEmail = email
+	f.gotCreatePassword = password
+
+	return f.createUserErr
 }
 
 func (f *fakeRepository) FindUserByEmail(ctx context.Context, email string) (domain.UserRow, error) {
